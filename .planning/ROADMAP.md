@@ -11,14 +11,14 @@
 **Goal:** Define unified ConsentEvent schema, build pluggable adapter system with 5 core adapters (OAuth, Browser Perms, Cookies, Policy, Terms), and establish plugin architecture for community extensibility
 
 **Success Criteria:**
-1. TypeScript types for ConsentEvent, Capability, Purpose, Evidence, DecisionRecord compile without errors
-2. Adapter interface defined; 5 adapters implemented and registered
-3. Each adapter extracts structured data from test HTML fixtures
-4. Adapter registry loads all adapters, runs them on a page, returns combined ConsentEvent[]
-5. Unit tests for each adapter pass
-6. **Plugin interfaces defined and working: registerAdapter, registerClassifier, registerPolicyExtractor, registerAIBackend, registerProvider**
-7. **Rule pack JSON schema defined; import/export config works**
-8. **Provider registry loads core 5 providers (Google, GitHub, Microsoft, Slack, Discord) from config**
+1. ✅ TypeScript types for ConsentEvent, Capability, Purpose, Evidence, DecisionRecord compile without errors
+2. ✅ Adapter interface defined; 5 adapters implemented and registered
+3. ✅ Each adapter extracts structured data from test HTML fixtures
+4. ✅ Adapter registry loads all adapters, runs them on a page, returns combined ConsentEvent[]
+5. ✅ Unit tests for each adapter pass (85 tests)
+6. ⏳ Plugin interfaces defined and working: registerAdapter, registerClassifier, registerPolicyExtractor, registerAIBackend, registerProvider
+7. ⏳ Rule pack JSON schema defined; import/export config works
+8. ⏳ Provider registry loads core 5 providers (Google, GitHub, Microsoft, Slack, Discord) from config
 
 **Requirements:** IR-01..05, ADAPTER-01..06, PLUGIN-01..08
 
@@ -40,6 +40,13 @@
 
 **Requirements:** ENGINE-01..08
 
+**Plans:** 3 plans
+
+Plans:
+- [ ] 02-01-PLAN.md — Core engine tracer: rule parser, domain/capability matching, basic decision engine
+- [ ] 02-02-PLAN.md — Precedence engine (4 layers), exception syntax (@@), 5 built-in policy packs
+- [ ] 02-03-PLAN.md — Temporary rules with TTL, decision explanation, full Phase 1→2 integration test
+
 ---
 
 ### Phase 3: AI Semantic Layer + OpenJev Integration
@@ -59,6 +66,13 @@
 10. **AI backend plugin interface works — can swap OpenJev for local LLM**
 
 **Requirements:** AI-01..08, OPENJEV-01..06
+
+**Plans:** 3 plans
+
+Plans:
+- [ ] 03-01-PLAN.md — Core AI types + OpenJevClient tracer: evidence citations, 4 classification types (noul/choice/score), batch, plugin interface
+- [ ] 03-02-PLAN.md — AI semantic engines: purpose inference, permission interpretation, policy/terms extraction, mismatch reasoning, fallback heuristics
+- [ ] 03-03-PLAN.md — Integration pipeline, OpenJev mock tests, Phase 1→3 full integration, plugin swappability verification
 
 ---
 
