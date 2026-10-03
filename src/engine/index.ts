@@ -1,0 +1,35 @@
+/**
+ * Engine module exports - deterministic policy engine
+ */
+
+// Types
+export type {
+  Decision,
+  PrecedenceLayer,
+  ParsedRule,
+  MatchResult,
+  EngineDecision,
+} from './types.js';
+
+export {
+  PRECEDENCE_WEIGHTS,
+  generateRuleId,
+} from './types.js';
+
+// Rule Parser
+export {
+  parseRule,
+  parseRules,
+} from './rule-parser.js';
+
+// Rule Matcher
+export {
+  matchRule,
+  matchDomain,
+  matchCapability,
+} from './rule-matcher.js';
+
+// Decision Engine
+export {
+  DecisionEngine,
+} from './decision-engine.js';

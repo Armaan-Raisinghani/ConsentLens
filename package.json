@@ -31,6 +31,31 @@
       "types": "./dist/shared/index.d.ts",
       "import": "./dist/shared/index.js",
       "require": "./dist/shared/index.cjs"
+    },
+    "./engine": {
+      "types": "./dist/engine/index.d.ts",
+      "import": "./dist/engine/index.js",
+      "require": "./dist/engine/index.cjs"
+    },
+    "./engine/rule-parser": {
+      "types": "./dist/engine/rule-parser.d.ts",
+      "import": "./dist/engine/rule-parser.js",
+      "require": "./dist/engine/rule-parser.cjs"
+    },
+    "./engine/rule-matcher": {
+      "types": "./dist/engine/rule-matcher.d.ts",
+      "import": "./dist/engine/rule-matcher.js",
+      "require": "./dist/engine/rule-matcher.cjs"
+    },
+    "./engine/decision-engine": {
+      "types": "./dist/engine/decision-engine.d.ts",
+      "import": "./dist/engine/decision-engine.js",
+      "require": "./dist/engine/decision-engine.cjs"
+    },
+    "./engine/types": {
+      "types": "./dist/engine/types.d.ts",
+      "import": "./dist/engine/types.js",
+      "require": "./dist/engine/types.cjs"
     }
   },
   "scripts": {
