@@ -22,6 +22,11 @@
 
 **Requirements:** IR-01..05, ADAPTER-01..06, PLUGIN-01..08
 
+**Plans:**
+- ✅ 01-01-PLAN.md — Project scaffold + Core IR + OAuth Adapter (tracer) + AdapterRegistry + registerAdapter plugin
+- ✅ 01-02-PLAN.md — Browser Permissions, Cookie, Policy, Terms adapters + integration test
+- ⏳ 01-03-PLAN.md — Plugin interfaces (registerAdapter, registerClassifier, registerPolicyExtractor, registerAIBackend, registerProvider), Rule Pack schema, Config, Import/Export, Provider registry
+
 ---
 
 ### Phase 2: Deterministic Policy Engine
@@ -29,23 +34,23 @@
 **Goal:** uBlock-style rule parser, matcher, and decision engine with precedence, exceptions, policy packs
 
 **Success Criteria:**
-1. Rule parser handles: `capability@domain = action`, `@@capability@domain` exceptions, wildcards, category wildcards
-2. Precedence engine: user > trusted > community > defaults
-3. Domain matching: exact, suffix (example.com), wildcard (*.example.com), regex
-4. Capability matching: exact, category prefix (oauth.google.*, cookie.*)
-5. 5 built-in policy packs load and produce decisions
-6. Decision explanation returns matched rule, layer, capability, domain, action
-7. Temporary rules with TTL work
-8. Engine tests cover all syntax variants and precedence scenarios
+1. ✅ Rule parser handles: `capability@domain = action`, `@@capability@domain` exceptions, wildcards, category wildcards
+2. ✅ Precedence engine: user > trusted > community > defaults
+3. ✅ Domain matching: exact, suffix (example.com), wildcard (*.example.com), regex
+4. ✅ Capability matching: exact, category prefix (oauth.google.*, cookie.*)
+5. ✅ 5 built-in policy packs load and produce decisions
+6. ⏳ Decision explanation returns matched rule, layer, capability, domain, action
+7. ⏳ Temporary rules with TTL work
+8. ⏳ Engine tests cover all syntax variants and precedence scenarios
 
 **Requirements:** ENGINE-01..08
 
 **Plans:** 3 plans
 
 Plans:
-- [ ] 02-01-PLAN.md — Core engine tracer: rule parser, domain/capability matching, basic decision engine
-- [ ] 02-02-PLAN.md — Precedence engine (4 layers), exception syntax (@@), 5 built-in policy packs
-- [ ] 02-03-PLAN.md — Temporary rules with TTL, decision explanation, full Phase 1→2 integration test
+- ✅ 02-01-PLAN.md — Core engine tracer: rule parser, domain/capability matching, basic decision engine
+- ✅ 02-02-PLAN.md — Precedence engine (4 layers), exception syntax (@@), 5 built-in policy packs
+- ⏳ 02-03-PLAN.md — Temporary rules with TTL, decision explanation, full Phase 1→2 integration test
 
 ---
 
@@ -144,15 +149,15 @@ Plans:
 ## Phase Dependencies
 
 ```
-Phase 1 (IR + Adapters + Plugins)
+Phase 1 (IR + Adapters + Plugins) → 66% complete
     ↓
-Phase 2 (Policy Engine) ──→ Phase 3 (AI + OpenJev)
+Phase 2 (Policy Engine) → 66% complete ──→ Phase 3 (AI + OpenJev) → Planned
     ↓                          ↓
-    └──────→ Phase 4 (Cross-Source + History)
+    └──────→ Phase 4 (Cross-Source + History) → Planned
                 ↓
-            Phase 5 (Extension + Settings)
+            Phase 5 (Extension + Settings) → Pending
                 ↓
-            Phase 6 (Demo + Polish + Contributing)
+            Phase 6 (Demo + Polish + Contributing) → Pending
 ```
 
 ---
@@ -173,7 +178,14 @@ Phase 2 (Policy Engine) ──→ Phase 3 (AI + OpenJev)
 ## MVP Cut Line
 
 **Must Have (Phases 1-5 core):**
-- Consent IR, 5 adapters, **plugin architecture**, policy engine, AI layer, OpenJev, cross-source, history, extension side panel + settings
+- ✅ Consent IR (Phase 1: 01-01, 01-02)
+- ✅ 5 adapters (Phase 1: 01-02)
+- ⏳ Plugin architecture (Phase 1: 01-03)
+- ✅ Policy engine core (Phase 2: 02-01, 02-02)
+- ⏳ Policy engine: TTL, explanation, integration (Phase 2: 02-03)
+- ⏳ AI layer + OpenJev (Phase 3)
+- ⏳ Cross-source reasoning + history (Phase 4)
+- ⏳ Extension side panel + settings (Phase 5)
 
 **Nice to Have (Phase 6 + Polish):**
 - 4 demo sites, polished UX, README, license, demo script, CONTRIBUTING.md
