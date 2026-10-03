@@ -87,33 +87,34 @@ export class FallbackHeuristics {
 
     if (isOAuthCapability(capability)) {
       const provider = capability.provider;
-      const scopes = capability.scope.join(', ');
+      const scopes = capability.scope;
+      const scopeStr = scopes.join(', ');
       
       if (provider === 'google') {
-        if (scopes.includes('drive')) {
-          description = `Access to your Google Drive files (${scopes})`;
+        if (scopes.some(s => s === 'drive' || s.startsWith('drive.'))) {
+          description = `Access to your Google Drive files (${scopeStr})`;
           sensitivity = 'high';
-        } else if (scopes.includes('calendar')) {
-          description = `Access to your Google Calendar (${scopes})`;
+        } else if (scopes.some(s => s === 'calendar' || s.startsWith('calendar.'))) {
+          description = `Access to your Google Calendar (${scopeStr})`;
           sensitivity = 'high';
-        } else if (scopes.includes('mail') || scopes.includes('gmail')) {
-          description = `Access to your Gmail (${scopes})`;
+        } else if (scopes.some(s => s === 'mail' || s === 'gmail' || s.startsWith('mail.') || s.startsWith('gmail.'))) {
+          description = `Access to your Gmail (${scopeStr})`;
           sensitivity = 'high';
-        } else if (scopes.includes('profile') || scopes.includes('email')) {
-          description = `Access to your basic Google profile (${scopes})`;
+        } else if (scopes.some(s => s === 'profile' || s === 'email' || s === 'openid')) {
+          description = `Access to your basic Google profile (${scopeStr})`;
           sensitivity = 'low';
         } else {
-          description = `Access to Google services (${scopes})`;
+          description = `Access to Google services (${scopeStr})`;
           sensitivity = 'medium';
         }
       } else if (provider === 'github') {
-        description = `Access to your GitHub account (${scopes})`;
-        sensitivity = scopes.includes('admin') || scopes.includes('delete') ? 'high' : 'medium';
+        description = `Access to your GitHub account (${scopeStr})`;
+        sensitivity = scopes.some(s => s.includes('admin') || s.includes('delete')) ? 'high' : 'medium';
       } else if (provider === 'microsoft') {
-        description = `Access to your Microsoft account (${scopes})`;
+        description = `Access to your Microsoft account (${scopeStr})`;
         sensitivity = 'high';
       } else {
-        description = `Access to ${provider} (${scopes})`;
+        description = `Access to ${provider} (${scopeStr})`;
         sensitivity = 'medium';
       }
       confidence = 0.55;
@@ -140,21 +141,22 @@ export class FallbackHeuristics {
       }
       confidence = 0.55;
     } else if (isCookieCapability(capability)) {
-      const cat = capability.category;
+      const cat = capability.category.toLowerCase();
+      const name = capability.name || 'unknown';
       if (cat === 'advertising' || cat === 'tracking') {
-        description = `Tracking cookie for advertising analytics (${capability.name || 'unknown'})`;
+        description = `Tracking cookie for advertising analytics (${name})`;
         sensitivity = 'high';
       } else if (cat === 'analytics') {
-        description = `Analytics cookie for site usage tracking (${capability.name || 'unknown'})`;
+        description = `Analytics cookie for site usage tracking (${name})`;
         sensitivity = 'low';
       } else if (cat === 'essential' || cat === 'necessary') {
-        description = `Essential cookie for site functionality (${capability.name || 'unknown'})`;
+        description = `Essential cookie for site functionality (${name})`;
         sensitivity = 'low';
       } else if (cat === 'personalization' || cat === 'preferences') {
-        description = `Preference cookie for personalization (${capability.name || 'unknown'})`;
+        description = `Preference cookie for personalization (${name})`;
         sensitivity = 'low';
       } else {
-        description = `Cookie: ${cat} (${capability.name || 'unknown'})`;
+        description = `Cookie: ${cat} (${name})`;
         sensitivity = 'medium';
       }
       confidence = 0.5;
@@ -164,7 +166,17 @@ export class FallbackHeuristics {
       confidence = 0.4;
     } else if (isTermsCapability(capability)) {
       description = `Terms clause: ${capability.clause}`;
-      sensitivity = ['arbitration', 'liability', 'content-license'].some(k => capability.clause.includes(k)) ? 'high' : 'medium';
+      const clause = capability.clause.toLowerCase();
+      // Per plan: arbitration=high, content-license=high, auto-renewal=medium, liability=medium, termination=medium, governing-law=low
+      if (clause.includes('arbitration') || clause.includes('content-license')) {
+        sensitivity = 'high';
+      } else if (clause.includes('liability') || clause.includes('auto-renewal') || clause.includes('termination')) {
+        sensitivity = 'medium';
+      } else if (clause.includes('governing-law')) {
+        sensitivity = 'low';
+      } else {
+        sensitivity = 'medium';
+      }
       confidence = 0.4;
     }
 
@@ -174,6 +186,7 @@ export class FallbackHeuristics {
       capability,
       description,
       sensitivity,
+      confidence: Math.min(confidence, this.MAX_HEURISTIC_CONFIDENCE),
       evidence,
     };
   }
