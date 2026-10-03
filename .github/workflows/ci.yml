@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run lint
+        run: pnpm lint
+
+      - name: Run typecheck
+        run: pnpm typecheck
+
+      - name: Run tests
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build
+
+      - name: Verify build output
+        run: |
+          ls -la dist/
+          test -f dist/index.js
+          test -f dist/index.cjs
+          test -f dist/index.d.ts
+          test -f dist/ir/index.js
+          test -f dist/ir/index.cjs
+          test -f dist/ir/index.d.ts
+          test -f dist/adapters/index.js
+          test -f dist/adapters/index.cjs
+          test -f dist/adapters/index.d.ts
+          test -f dist/plugins/index.js
+          test -f dist/plugins/index.cjs
+          test -f dist/plugins/index.d.ts
+          test -f dist/shared/index.js
+          test -f dist/shared/index.cjs
+          test -f dist/shared/index.d.ts
