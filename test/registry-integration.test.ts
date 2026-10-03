@@ -11,9 +11,8 @@ import { BrowserPermissionAdapter } from '../src/adapters/browser-permission-ada
 import { CookieAdapter } from '../src/adapters/cookie-adapter.js';
 import { PolicyAdapter } from '../src/adapters/policy-adapter.js';
 import { TermsAdapter } from '../src/adapters/terms-adapter.js';
-import { ConsentType, GrantStatus, EvidenceSource } from '../src/shared/types.js';
+import { ConsentType, GrantStatus } from '../src/shared/types.js';
 import { isOAuthCapability, isBrowserPermissionCapability, isCookieCapability, isPolicyCapability, isTermsCapability } from '../src/ir/capability.js';
-import type { ConsentEvent } from '../src/ir/consent-event.js';
 import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
@@ -105,9 +104,7 @@ describe('Full Adapter Registry Integration', () => {
     const policyContent = 'We collect your personal data including name and email. We share data with third parties. We use data to train AI models. We retain data for 2 years. You have rights to access and delete your data. We implement security measures to protect your information.';
     const termsContent = 'You agree to binding arbitration. You grant us a license to your content. We may terminate your account. The subscription auto-renews. We are not liable for damages. This agreement is governed by the laws of California.';
     
-    let fetchCallCount = 0;
     global.fetch = vi.fn().mockImplementation(async (url) => {
-      fetchCallCount++;
       const urlStr = url.toString();
       if (urlStr.includes('r.jina.ai')) {
         // Return policy content for policy URLs, terms content for terms URLs
@@ -227,7 +224,8 @@ describe('Full Adapter Registry Integration', () => {
   it('should support mutable context enrichment: OAuth detectedProvider flows to Policy (D-24)', async () => {
     registry.register([oauthAdapter, browserAdapter, cookieAdapter, policyAdapter, termsAdapter]);
     
-    const longContent = 'We collect your personal data including name and email. We share data with third parties. We use data to train AI models. We retain data for 2 years. You have rights to access and delete your data. We implement security measures to protect your information.';
+    // Content must be > 500 chars to pass PolicyAdapter's direct-text check
+    const longContent = 'We collect your personal data including name and email. We share data with third parties. We use data to train AI models. We retain data for 2 years. You have rights to access and delete your data. We implement security measures to protect your information. You agree to binding arbitration. You grant us a license to your content. We may terminate your account. The subscription auto-renews. We are not liable for damages. This agreement is governed by the laws of California.';
     
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
@@ -246,7 +244,7 @@ describe('Full Adapter Registry Integration', () => {
     expect(policyEvents.length).toBeGreaterThan(0);
     
     // The shared context should be available to all adapters
-    const sharedContext = pageContext.metadata!.sharedContext as Map<string, unknown>;
+    const sharedContext = pageContext.metadata!['sharedContext'] as Map<string, unknown>;
     expect(sharedContext).toBeDefined();
   });
 

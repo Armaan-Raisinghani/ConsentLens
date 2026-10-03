@@ -8,7 +8,7 @@ import { createTermsCapability } from '../ir/capability.js';
 import { createDOMEvidence, createHeuristicEvidence } from '../ir/evidence.js';
 import type { AdapterResult, AdapterError, PageContext } from '../shared/errors.js';
 import { ErrorSeverity } from '../shared/errors.js';
-import { ConsentType, GrantStatus, EvidenceSource, ExtractionMethod } from '../shared/types.js';
+import { ConsentType, GrantStatus, ExtractionMethod } from '../shared/types.js';
 import { Readability } from '@mozilla/readability';
 import { JSDOM } from 'jsdom';
 

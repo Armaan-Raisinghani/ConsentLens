@@ -8,7 +8,7 @@ import { createPolicyCapability } from '../ir/capability.js';
 import { createDOMEvidence, createHeuristicEvidence } from '../ir/evidence.js';
 import type { AdapterResult, AdapterError, PageContext } from '../shared/errors.js';
 import { ErrorSeverity } from '../shared/errors.js';
-import { ConsentType, GrantStatus, EvidenceSource, ExtractionMethod } from '../shared/types.js';
+import { ConsentType, GrantStatus, ExtractionMethod } from '../shared/types.js';
 import { Readability } from '@mozilla/readability';
 import { JSDOM } from 'jsdom';
 
@@ -256,7 +256,8 @@ export class PolicyAdapter extends BaseAdapter {
 
     try {
       // Check for OAuth provider in shared context (D-24: mutable context enrichment)
-      const detectedProvider = context.metadata?.sharedContext?.get?.('detectedProvider') as string | undefined;
+      const sharedContext = context.metadata?.['sharedContext'] as Map<string, unknown> | undefined;
+      const detectedProvider = sharedContext?.get('detectedProvider') as string | undefined;
 
       // 1. Find privacy policy links
       const policyLinks = this.findPolicyLinks(document, url);

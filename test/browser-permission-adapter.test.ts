@@ -7,7 +7,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { JSDOM } from 'jsdom';
 import { BrowserPermissionAdapter } from '../src/adapters/browser-permission-adapter.js';
 import { AdapterRegistry } from '../src/adapters/registry.js';
-import { ConsentType, GrantStatus, EvidenceSource, ExtractionMethod } from '../src/shared/types.js';
+import { ConsentType, GrantStatus, EvidenceSource } from '../src/shared/types.js';
 import { isBrowserPermissionCapability } from '../src/ir/capability.js';
 import type { ConsentEvent } from '../src/ir/consent-event.js';
 import type { BrowserPermissionCapability } from '../src/ir/capability.js';
@@ -204,6 +204,8 @@ describe('BrowserPermissionAdapter', () => {
     expect(evidenceList.length).toBeGreaterThan(0);
     
     const evidence = evidenceList[0];
+    expect(evidence).toBeDefined();
+    if (!evidence) return;
     expect(evidence.source).toBe(EvidenceSource.DOM);
     expect(evidence.selector).toBeDefined();
     expect(evidence.confidence).toBeGreaterThan(0);

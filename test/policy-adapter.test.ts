@@ -7,10 +7,8 @@ import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { JSDOM } from 'jsdom';
 import { PolicyAdapter, PolicyPractice } from '../src/adapters/policy-adapter.js';
 import { AdapterRegistry } from '../src/adapters/registry.js';
-import { ConsentType, GrantStatus, EvidenceSource, ExtractionMethod } from '../src/shared/types.js';
+import { ConsentType, GrantStatus } from '../src/shared/types.js';
 import { isPolicyCapability } from '../src/ir/capability.js';
-import type { ConsentEvent } from '../src/ir/consent-event.js';
-import type { PolicyCapability } from '../src/ir/capability.js';
 import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
@@ -21,24 +19,6 @@ const __dirname = dirname(__filename);
 // Load test fixture
 const fixturePath = join(__dirname, 'fixtures', 'policy-page.html');
 const fixtureHtml = readFileSync(fixturePath, 'utf-8');
-
-function getPolicyEvent(
-  result: { events: ConsentEvent[] },
-  practice: PolicyPractice
-): ConsentEvent & { capability: PolicyCapability } | undefined {
-  return result.events.find((e): e is ConsentEvent & { capability: PolicyCapability } =>
-    isPolicyCapability(e.capability) && e.capability.practice === practice
-  );
-}
-
-function getPolicyEventsByPractice(
-  result: { events: ConsentEvent[] },
-  practice: PolicyPractice
-): (ConsentEvent & { capability: PolicyCapability })[] {
-  return result.events.filter((e): e is ConsentEvent & { capability: PolicyCapability } =>
-    isPolicyCapability(e.capability) && e.capability.practice === practice
-  );
-}
 
 describe('PolicyAdapter', () => {
   let adapter: PolicyAdapter;
@@ -85,15 +65,15 @@ describe('PolicyAdapter', () => {
     const links = (adapter as any).findPolicyLinks(document, 'http://localhost:3000/');
     
     expect(links.length).toBeGreaterThan(0);
-    expect(links.some(l => l.includes('privacy-policy'))).toBe(true);
+    expect(links.some((l: string) => l.includes('privacy-policy'))).toBe(true);
   });
 
   it('should detect common policy URL paths', async () => {
     const links = (adapter as any).findPolicyLinks(document, 'http://example.com/');
     
-    expect(links.some(l => l === 'http://example.com/privacy')).toBe(true);
-    expect(links.some(l => l === 'http://example.com/privacy-policy')).toBe(true);
-    expect(links.some(l => l === 'http://example.com/policy')).toBe(true);
+    expect(links.some((l: string) => l === 'http://example.com/privacy')).toBe(true);
+    expect(links.some((l: string) => l === 'http://example.com/privacy-policy')).toBe(true);
+    expect(links.some((l: string) => l === 'http://example.com/policy')).toBe(true);
   });
 
   it('should extract policy practices from content', async () => {
@@ -135,7 +115,9 @@ describe('PolicyAdapter', () => {
     for (const event of result.events) {
       expect(event.consentType).toBe(ConsentType.Policy);
       expect(event.capability.type).toBe('policy');
-      expect(event.capability.practice).toBeDefined();
+      if (isPolicyCapability(event.capability)) {
+        expect(event.capability.practice).toBeDefined();
+      }
       expect(event.grantStatus).toBe(GrantStatus.Pending);
       expect(event.website).toBe('http://localhost:3000');
       expect(event.evidence.length).toBeGreaterThan(0);
@@ -187,7 +169,8 @@ describe('PolicyAdapter', () => {
     });
     
     // Set detectedProvider in shared context
-    pageContext.metadata!.sharedContext!.set('detectedProvider', 'google');
+    const sharedContext = pageContext.metadata!['sharedContext'] as Map<string, unknown>;
+    sharedContext.set('detectedProvider', 'google');
     
     const result = await adapter.extract(pageContext);
     

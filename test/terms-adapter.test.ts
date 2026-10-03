@@ -7,10 +7,8 @@ import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { JSDOM } from 'jsdom';
 import { TermsAdapter, TermsClause, TermsSeverity } from '../src/adapters/terms-adapter.js';
 import { AdapterRegistry } from '../src/adapters/registry.js';
-import { ConsentType, GrantStatus, EvidenceSource, ExtractionMethod } from '../src/shared/types.js';
+import { ConsentType, GrantStatus } from '../src/shared/types.js';
 import { isTermsCapability } from '../src/ir/capability.js';
-import type { ConsentEvent } from '../src/ir/consent-event.js';
-import type { TermsCapability } from '../src/ir/capability.js';
 import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
@@ -21,15 +19,6 @@ const __dirname = dirname(__filename);
 // Load test fixture
 const fixturePath = join(__dirname, 'fixtures', 'terms-page.html');
 const fixtureHtml = readFileSync(fixturePath, 'utf-8');
-
-function getTermsEvent(
-  result: { events: ConsentEvent[] },
-  clause: TermsClause
-): ConsentEvent & { capability: TermsCapability } | undefined {
-  return result.events.find((e): e is ConsentEvent & { capability: TermsCapability } =>
-    isTermsCapability(e.capability) && e.capability.clause === clause
-  );
-}
 
 describe('TermsAdapter', () => {
   let adapter: TermsAdapter;
@@ -70,15 +59,15 @@ describe('TermsAdapter', () => {
     const links = (adapter as any).findTermsLinks(document, 'http://localhost:3000/');
     
     expect(links.length).toBeGreaterThan(0);
-    expect(links.some(l => l.includes('terms'))).toBe(true);
+    expect(links.some((l: string) => l.includes('terms'))).toBe(true);
   });
 
   it('should detect common terms URL paths', async () => {
     const links = (adapter as any).findTermsLinks(document, 'http://example.com/');
     
-    expect(links.some(l => l === 'http://example.com/terms')).toBe(true);
-    expect(links.some(l => l === 'http://example.com/terms-of-service')).toBe(true);
-    expect(links.some(l => l === 'http://example.com/tos')).toBe(true);
+    expect(links.some((l: string) => l === 'http://example.com/terms')).toBe(true);
+    expect(links.some((l: string) => l === 'http://example.com/terms-of-service')).toBe(true);
+    expect(links.some((l: string) => l === 'http://example.com/tos')).toBe(true);
   });
 
   it('should extract terms clauses from content', async () => {
@@ -151,19 +140,9 @@ describe('TermsAdapter', () => {
     for (const event of result.events) {
       expect(event.consentType).toBe(ConsentType.Terms);
       expect(event.capability.type).toBe('terms');
-      expect(event.capability.clause).toBeDefined();
-      expect(event.grantStatus).toBe(GrantStatus.Pending);
-      expect(event.website).toBe('http://localhost:3000');
-      expect(event.evidence.length).toBeGreaterThan(0);
-      expect(event.userAction).toContain('terms-fetch:');
-      expect(event.resource).toBeDefined();
-      expect(event.termsEvidence).toBeDefined();
-    }
-    
-    for (const event of result.events) {
-      expect(event.consentType).toBe(ConsentType.Terms);
-      expect(event.capability.type).toBe('terms');
-      expect(event.capability.clause).toBeDefined();
+      if (isTermsCapability(event.capability)) {
+        expect(event.capability.clause).toBeDefined();
+      }
       expect(event.grantStatus).toBe(GrantStatus.Pending);
       expect(event.website).toBe('http://localhost:3000');
       expect(event.evidence.length).toBeGreaterThan(0);

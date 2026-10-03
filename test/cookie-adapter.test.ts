@@ -3,7 +3,7 @@
  * Verifies CookieAdapter classifies cookies using tracker lists with eTLD+1 logic
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { JSDOM } from 'jsdom';
 import { CookieAdapter, CookieCategory } from '../src/adapters/cookie-adapter.js';
 import { AdapterRegistry } from '../src/adapters/registry.js';
@@ -65,7 +65,7 @@ function createDomWithCookies(cookieString: string): { dom: JSDOM; document: Doc
 
 describe('CookieAdapter', () => {
   let adapter: CookieAdapter;
-  let dom: JSDOM;
+  let _dom: JSDOM;
   let document: Document;
   let pageContext: {
     document: Document;
@@ -77,7 +77,9 @@ describe('CookieAdapter', () => {
     adapter = new CookieAdapter();
     // Default empty cookies
     const { dom: d, document: doc } = createDomWithCookies('');
-    dom = d;
+    _dom = d;
+    // Keep JSDOM instance alive
+    void _dom;
     document = doc;
     pageContext = {
       document,
@@ -164,7 +166,7 @@ describe('CookieAdapter', () => {
     const analyticsEvents = getCookieEventsByCategory(result, CookieCategory.Analytics);
     
     expect(analyticsEvents.length).toBeGreaterThan(0);
-    const names = analyticsEvents.map(e => e.capability.name);
+    const names = analyticsEvents.map(e => e.capability.name).filter((n): n is string => !!n);
     expect(names.some(n => n === '_ga' || n === '_gid' || n === '_gat' || n.startsWith('_hj'))).toBe(true);
   });
 
@@ -349,7 +351,6 @@ describe('CookieAdapter domain matching', () => {
 describe('AdapterRegistry with CookieAdapter', () => {
   let registry: AdapterRegistry;
   let adapter: CookieAdapter;
-  let dom: JSDOM;
   let document: Document;
   let pageContext: {
     document: Document;
@@ -360,8 +361,7 @@ describe('AdapterRegistry with CookieAdapter', () => {
   beforeEach(() => {
     registry = new AdapterRegistry();
     adapter = new CookieAdapter();
-    const { dom: d, document: doc } = createDomWithCookies('test=test');
-    dom = d;
+    const { document: doc } = createDomWithCookies('test=test');
     document = doc;
     pageContext = {
       document,

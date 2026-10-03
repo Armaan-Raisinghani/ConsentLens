@@ -54,7 +54,6 @@
   "devDependencies": {
     "@types/jsdom": "^21.1.6",
     "@types/node": "^20.10.0",
-    "@types/psl": "^1.11.0",
     "@typescript-eslint/eslint-plugin": "^6.13.0",
     "@typescript-eslint/parser": "^6.13.0",
     "eslint": "^8.55.0",

@@ -8,8 +8,8 @@ import { createCookieCapability } from '../ir/capability.js';
 import { createDOMEvidence, createHeuristicEvidence } from '../ir/evidence.js';
 import type { AdapterResult, AdapterError, PageContext } from '../shared/errors.js';
 import { ErrorSeverity } from '../shared/errors.js';
-import { ConsentType, GrantStatus, EvidenceSource, ExtractionMethod } from '../shared/types.js';
-import psl from 'psl';
+import { ConsentType, GrantStatus, ExtractionMethod } from '../shared/types.js';
+import { parse as pslParse } from 'psl';
 
 /**
  * Cookie category enumeration
@@ -614,8 +614,9 @@ export class CookieAdapter extends BaseAdapter {
         hostname = urlOrDomain;
       }
       
-      const parsed = psl.parse(hostname);
-      if (parsed && parsed.domain) {
+      const parsed = pslParse(hostname);
+      // Type guard: check if it's a ParsedDomain (not ErrorResult)
+      if (parsed && 'domain' in parsed && parsed.domain) {
         return parsed.domain.toLowerCase();
       }
       return hostname.toLowerCase();

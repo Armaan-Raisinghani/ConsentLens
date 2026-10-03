@@ -8,7 +8,7 @@ import { createBrowserPermissionCapability } from '../ir/capability.js';
 import { createDOMEvidence } from '../ir/evidence.js';
 import type { AdapterResult, AdapterError, PageContext } from '../shared/errors.js';
 import { ErrorSeverity } from '../shared/errors.js';
-import { ConsentType, GrantStatus, EvidenceSource, ExtractionMethod } from '../shared/types.js';
+import { ConsentType, GrantStatus, ExtractionMethod } from '../shared/types.js';
 
 /**
  * Known browser permissions to detect
@@ -63,23 +63,7 @@ const PERMISSION_PATTERNS = {
   sensors: /new\s+(Accelerometer|Gyroscope|Magnetometer|AmbientLightSensor|AbsoluteOrientationSensor|RelativeOrientationSensor|LinearAccelerationSensor|GravitySensor)\s*\(/g,
 } as const;
 
-/**
- * UI elements that request permissions
- */
-const PERMISSION_UI_SELECTORS = [
-  'button[data-permission]',
-  'a[data-permission]',
-  '[data-permission-request]',
-  '[data-permission]',
-  'button:contains("Allow")',
-  'button:contains("Enable")',
-  'button:contains("Grant")',
-  '[onclick*="permission"]',
-  '[onclick*="geolocation"]',
-  '[onclick*="camera"]',
-  '[onclick*="microphone"]',
-  '[onclick*="notification"]',
-] as const;
+
 
 /**
  * BrowserPermissionAdapter class implementing Adapter interface
@@ -138,7 +122,7 @@ export class BrowserPermissionAdapter extends BaseAdapter {
       const queryMatches = content.matchAll(PERMISSION_PATTERNS.query);
       for (const match of queryMatches) {
         const permission = match[1];
-        if (this.isValidPermission(permission)) {
+        if (permission && this.isValidPermission(permission)) {
           events.push(this.createPermissionEvent(permission, script, url, origin, 'query'));
         }
       }
@@ -147,7 +131,7 @@ export class BrowserPermissionAdapter extends BaseAdapter {
       const requestMatches = content.matchAll(PERMISSION_PATTERNS.request);
       for (const match of requestMatches) {
         const permission = match[1];
-        if (this.isValidPermission(permission)) {
+        if (permission && this.isValidPermission(permission)) {
           events.push(this.createPermissionEvent(permission, script, url, origin, 'request'));
         }
       }
@@ -191,7 +175,8 @@ export class BrowserPermissionAdapter extends BaseAdapter {
       // Check for sensor APIs
       const sensorMatches = content.matchAll(PERMISSION_PATTERNS.sensors);
       for (const match of sensorMatches) {
-        const sensorType = match[1].toLowerCase();
+        const sensorType = match[1]?.toLowerCase();
+        if (!sensorType) continue;
         // Map sensor constructors to permission names
         const permissionMap: Record<string, BrowserPermission> = {
           accelerometer: 'sensors',

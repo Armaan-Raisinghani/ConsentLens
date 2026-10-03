@@ -24,6 +24,6 @@
       "@consentlens/core/*": ["src/*"]
     }
   },
-  "include": ["src/**/*", "test/**/*", "vitest.config.ts", "tsup.config.ts"],
+  "include": ["src/**/*", "test/**/*", "vitest.config.ts", "tsup.config.ts", "src/types/*.d.ts"],
   "exclude": ["node_modules", "dist"]
 }
