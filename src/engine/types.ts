@@ -56,10 +56,30 @@ export interface EngineDecision {
   decision: Decision;
   /** The rule that matched (if any) */
   matchedRule?: ParsedRule;
+  /** The precedence layer where the match was found */
+  matchedLayer?: PrecedenceLayer | 'exception';
   /** Human-readable explanation of the decision */
   explanation: string;
   /** Confidence score (0-1) */
   confidence: number;
+}
+
+/**
+ * PolicyPack interface - defines a named collection of rules
+ */
+export interface PolicyPack {
+  /** Unique identifier */
+  id: string;
+  /** Human-readable name */
+  name: string;
+  /** Description of what this pack does */
+  description: string;
+  /** Version string */
+  version: string;
+  /** Array of rule strings in uBlock syntax */
+  rules: string[];
+  /** Precedence layer for this pack */
+  layer: PrecedenceLayer;
 }
 
 /**

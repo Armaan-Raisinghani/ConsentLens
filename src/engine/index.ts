@@ -27,6 +27,7 @@ export {
   matchRule,
   matchDomain,
   matchCapability,
+  extractDomain,
 } from './rule-matcher.js';
 
 // Decision Engine

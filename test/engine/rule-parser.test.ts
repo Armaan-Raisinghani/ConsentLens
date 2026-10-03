@@ -140,7 +140,7 @@ oauth.google@drive.google.com = deny
 `);
     
     expect(rules).toHaveLength(1);
-    expect(rules[0].raw).toBe('oauth.google@drive.google.com = deny');
+    expect(rules[0]?.raw).toBe('oauth.google@drive.google.com = deny');
   });
   
   it('should skip lines starting with #', () => {
@@ -150,6 +150,7 @@ oauth.google@drive.google.com = deny
 `);
     
     expect(rules).toHaveLength(1);
+    expect(rules[0]?.raw).toBe('oauth.google@drive.google.com = deny');
   });
   
   it('should handle inline comments with #', () => {
@@ -201,10 +202,10 @@ browser-permission.geolocation@maps.google.com = ask
     const rules = parseRules(text);
     
     expect(rules).toHaveLength(4);
-    expect(rules[0].raw).toBe('oauth.google@drive.google.com = deny');
-    expect(rules[1].raw).toBe('cookie.*@example.com = allow');
-    expect(rules[2].raw).toBe('@@oauth.github@github.com');
-    expect(rules[3].raw).toBe('browser-permission.geolocation@maps.google.com = ask');
+    expect(rules[0]?.raw).toBe('oauth.google@drive.google.com = deny');
+    expect(rules[1]?.raw).toBe('cookie.*@example.com = allow');
+    expect(rules[2]?.raw).toBe('@@oauth.github@github.com');
+    expect(rules[3]?.raw).toBe('browser-permission.geolocation@maps.google.com = ask');
   });
 });
 

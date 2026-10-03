@@ -96,6 +96,7 @@
   "packageManager": "pnpm@9.0.0",
   "dependencies": {
     "@mozilla/readability": "^0.6.0",
-    "psl": "^1.15.0"
+    "psl": "^1.15.0",
+    "zod": "^4.6.5"
   }
 }

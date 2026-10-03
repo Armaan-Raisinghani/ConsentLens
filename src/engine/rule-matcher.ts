@@ -5,8 +5,20 @@
 
 import type { ParsedRule, MatchResult } from './types.js';
 import type { ConsentEvent } from '../ir/consent-event.js';
-import type { Capability, OAuthCapability, CookieCapability, BrowserPermissionCapability, PolicyCapability, TermsCapability } from '../ir/capability.js';
+import type { Capability } from '../ir/capability.js';
 import { isOAuthCapability, isCookieCapability, isBrowserPermissionCapability, isPolicyCapability, isTermsCapability } from '../ir/capability.js';
+
+/**
+ * Safe array access helper for noUncheckedIndexedAccess compatibility
+ * Returns T (never undefined) - throws if index out of bounds
+ */
+function getArrayElement<T>(arr: readonly T[], index: number): T {
+  const value = arr[index];
+  if (value === undefined) {
+    throw new Error(`Array index ${index} out of bounds`);
+  }
+  return value; // TypeScript narrows type after the throw
+}
 
 /**
  * Match a rule against a ConsentEvent
@@ -29,7 +41,7 @@ export function matchRule(rule: ParsedRule, event: ConsentEvent): MatchResult {
 
 /**
  * Match domain pattern against a website URL/domain
- * Supports: exact, suffix, wildcard (*.example.com), regex (/pattern/flags)
+ * Supports: exact, suffix, wildcard (*.example.com), universal wildcard (*), regex (/pattern/flags)
  * @param pattern - Domain pattern from rule
  * @param website - Website URL from ConsentEvent
  * @returns true if domain matches
@@ -38,6 +50,11 @@ export function matchDomain(pattern: string, website: string): boolean {
   // Extract domain from website URL
   const domain = extractDomain(website).toLowerCase();
   const normalizedPattern = pattern.toLowerCase();
+  
+  // Universal wildcard: * matches any domain
+  if (normalizedPattern === '*') {
+    return true;
+  }
   
   // Regex pattern: /pattern/flags
   if (normalizedPattern.startsWith('/') && normalizedPattern.lastIndexOf('/') > 0) {
@@ -119,8 +136,8 @@ export function matchCapability(pattern: string, capability: Capability): boolea
   
   // Provider wildcard: type.provider.* (e.g., oauth.google.*)
   if (hasWildcard && wildcardIndex === rest.length - 1 && rest.length === 2) {
-    const provider: string = rest[0]!; // non-null assertion, rest.length === 2
-    return matchProviderWildcard(type, provider, capability);
+    // @ts-expect-error - noUncheckedIndexedAccess makes rest[0] string | undefined but rest.length === 2 guarantees existence
+    return matchProviderWildcard(type, rest[0], capability);
   }
   
   // Exact match: type.provider (e.g., oauth.google) or type.provider.scope (e.g., oauth.google.drive)
@@ -131,6 +148,7 @@ export function matchCapability(pattern: string, capability: Capability): boolea
  * Match provider wildcard pattern (e.g., oauth.google.*)
  */
 function matchProviderWildcard(type: string, provider: string, capability: Capability): boolean {
+  if (!provider) return false;
   if (capability.type !== type) return false;
   
   switch (type) {
@@ -157,11 +175,11 @@ function matchExactCapability(pattern: string, capability: Capability): boolean 
       if (!isOAuthCapability(capability)) return false;
       // oauth.google or oauth.google.drive
       if (rest.length === 1) {
-        return capability.provider === (rest[0] as string);
+        return capability.provider === getArrayElement(rest, 0);
       }
       if (rest.length === 2) {
-        const provider = rest[0] as string;
-        const scope = rest[1] as string;
+        const provider = getArrayElement(rest, 0);
+        const scope = getArrayElement(rest, 1);
         return capability.provider === provider && capability.scope.some(s => s.includes(scope) || scope.includes(s));
       }
       return false;
@@ -176,10 +194,10 @@ function matchExactCapability(pattern: string, capability: Capability): boolean 
       if (!isCookieCapability(capability)) return false;
       // cookie.analytics or cookie.analytics._ga
       if (rest.length === 1) {
-        return capability.category === (rest[0] as string);
+        return capability.category === getArrayElement(rest, 0);
       }
       if (rest.length === 2) {
-        return capability.category === (rest[0] as string) && capability.name === (rest[1] as string);
+        return capability.category === getArrayElement(rest, 0) && capability.name === getArrayElement(rest, 1);
       }
       return false;
     }
