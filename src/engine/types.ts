@@ -74,6 +74,14 @@ export const PRECEDENCE_WEIGHTS: Record<PrecedenceLayer, number> = {
 };
 
 /**
+ * RuleSet - a collection of rules at a specific precedence layer
+ */
+export interface RuleSet {
+  layer: PrecedenceLayer;
+  rules: ParsedRule[];
+}
+
+/**
  * Generates a unique ID from a raw rule string
  */
 export function generateRuleId(raw: string): string {
