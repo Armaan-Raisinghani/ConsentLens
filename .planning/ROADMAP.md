@@ -92,6 +92,13 @@ Plans:
 
 **Requirements:** CROSS-01..04, HIST-01..03
 
+**Plans:** 3 plans
+
+Plans:
+- [ ] 04-01-PLAN.md — CrossSourceAnalyzer tracer: unified ConsentView, overlap detection, sensitivity clustering
+- [ ] 04-02-PLAN.md — Contradiction detection, IndexedDB history ledger, history queries
+- [ ] 04-03-PLAN.md — Audit view (unused permissions, old consents, changed policies), full Phase 1→4 integration test
+
 ---
 
 ### Phase 5: Chrome Extension (MV3) + Side Panel UI + Settings
