@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test OAuth Page</title>
+    <meta name="oauth-scope" content="profile email openid">
+    <meta property="oauth:scope" content="profile email openid">
+</head>
+<body>
+    <div class="login-container">
+        <h1>Sign In</h1>
+        
+        <!-- Google OAuth -->
+        <button 
+            class="oauth-button google-btn" 
+            data-provider="google"
+            data-scope="profile email openid https://www.googleapis.com/auth/drive.readonly"
+            onclick="window.location.href='https://accounts.google.com/o/oauth2/v2/auth?client_id=test&redirect_uri=http://localhost:3000/callback&response_type=code&scope=profile%20email%20openid%20https://www.googleapis.com/auth/drive.readonly'"
+        >
+            Continue with Google
+        </button>
+
+        <!-- GitHub OAuth -->
+        <a 
+            class="oauth-link github-link" 
+            href="https://github.com/login/oauth/authorize?client_id=test&redirect_uri=http://localhost:3000/callback&response_type=code&scope=read:user%20user:email%20repo"
+            data-provider="github"
+            data-scope="read:user user:email repo"
+        >
+            Sign in with GitHub
+        </a>
+
+        <!-- Microsoft OAuth -->
+        <button 
+            class="oauth-button microsoft-btn" 
+            data-provider="microsoft"
+            data-scope="User.Read Mail.Read Calendars.Read"
+            onclick="window.location.href='https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id=test&redirect_uri=http://localhost:3000/callback&response_type=code&scope=User.Read%20Mail.Read%20Calendars.Read'"
+        >
+            Continue with Microsoft
+        </button>
+
+        <!-- Slack OAuth -->
+        <a 
+            class="oauth-link slack-link" 
+            href="https://slack.com/oauth/v2/authorize?client_id=test&redirect_uri=http://localhost:3000/callback&response_type=code&scope=channels:read%20groups:read%20chat:write"
+            data-provider="slack"
+            data-scope="channels:read groups:read chat:write"
+        >
+            Add to Slack
+        </a>
+
+        <!-- Discord OAuth -->
+        <button 
+            class="oauth-button discord-btn" 
+            data-provider="discord"
+            data-scope="identify email guilds"
+            onclick="window.location.href='https://discord.com/oauth2/authorize?client_id=test&redirect_uri=http://localhost:3000/callback&response_type=code&scope=identify%20email%20guilds'"
+        >
+            Authorize with Discord
+        </a>
+
+        <!-- Generic OAuth fallback test -->
+        <a 
+            class="generic-oauth" 
+            href="/oauth/authorize?client_id=generic&redirect_uri=http://localhost:3000/callback&response_type=code&scope=read%20write"
+        >
+            Continue with Generic Provider
+        </a>
+
+        <!-- Button without data-provider but with OAuth-like text -->
+        <button class="oauth-button unknown-provider" onclick="window.location.href='https://auth.example.com/oauth/authorize?client_id=test&scope=profile'">
+            Continue with Example
+        </button>
+    </div>
+
+    <script>
+        // Simulate some dynamic OAuth elements
+        document.addEventListener('DOMContentLoaded', () => {
+            const container = document.querySelector('.login-container');
+            if (container) {
+                const dynamicBtn = document.createElement('button');
+                dynamicBtn.className = 'oauth-button dynamic-github';
+                dynamicBtn.setAttribute('data-provider', 'github');
+                dynamicBtn.setAttribute('data-scope', 'read:org admin:repo_hook');
+                dynamicBtn.textContent = 'Sign in with GitHub (Dynamic)';
+                dynamicBtn.onclick = () => {
+                    window.location.href = 'https://github.com/login/oauth/authorize?client_id=test&scope=read:org%20admin:repo_hook';
+                };
+                container.appendChild(dynamicBtn);
+            }
+        });
+    </script>
+</body>
+</html>
