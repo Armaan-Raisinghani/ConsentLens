@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Combined Test Page</title>
+    <link rel="privacy-policy" href="/privacy-policy">
+    <link rel="terms-of-service" href="/terms">
+    <meta name="privacy-policy" content="/privacy-policy">
+    <meta name="oauth-scope" content="profile email openid">
+    <meta property="oauth:scope" content="profile email openid">
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="/">Home</a>
+            <a href="/privacy-policy">Privacy Policy</a>
+            <a href="/terms">Terms of Service</a>
+        </nav>
+    </header>
+    
+    <main>
+        <h1>Welcome to Combined Test Site</h1>
+        
+        <!-- OAuth buttons -->
+        <section class="oauth-section">
+            <h2>Sign In Options</h2>
+            <button 
+                class="oauth-button google-btn" 
+                data-provider="google"
+                data-scope="profile email openid https://www.googleapis.com/auth/drive.readonly"
+                onclick="window.location.href='https://accounts.google.com/o/oauth2/v2/auth?client_id=test&redirect_uri=http://localhost:3000/callback&response_type=code&scope=profile%20email%20openid%20https://www.googleapis.com/auth/drive.readonly'"
+            >
+                Continue with Google
+            </button>
+
+            <a 
+                class="oauth-link github-link" 
+                href="https://github.com/login/oauth/authorize?client_id=test&redirect_uri=http://localhost:3000/callback&response_type=code&scope=read:user%20user:email%20repo"
+                data-provider="github"
+                data-scope="read:user user:email repo"
+            >
+                Sign in with GitHub
+            </a>
+        </section>
+        
+        <!-- Permission buttons -->
+        <section class="permissions-section">
+            <h2>Permissions</h2>
+            <button 
+                class="permission-btn" 
+                data-permission="geolocation"
+                onclick="navigator.geolocation.getCurrentPosition(success, error)"
+            >
+                Allow Location Access
+            </button>
+
+            <button 
+                class="permission-btn" 
+                data-permission="camera"
+                onclick="navigator.mediaDevices.getUserMedia({video: true})"
+            >
+                Enable Camera
+            </button>
+
+            <button 
+                class="permission-btn" 
+                data-permission="notifications"
+                onclick="Notification.requestPermission()"
+            >
+                Enable Notifications
+            </button>
+        </section>
+        
+        <!-- Links to policy and terms -->
+        <section class="legal-links">
+            <p>Please review our <a href="/privacy-policy">Privacy Policy</a> and <a href="/terms">Terms of Service</a>.</p>
+        </section>
+    </main>
+    
+    <footer>
+        <div class="footer-links">
+            <a href="/privacy-policy">Privacy Policy</a>
+            <a href="/terms">Terms of Service</a>
+            <a href="/cookie-policy">Cookie Policy</a>
+            <a href="/legal">Legal</a>
+        </div>
+    </footer>
+
+    <script>
+        // Inline script with OAuth detection
+        navigator.permissions.query({ name: 'geolocation' }).then(result => {
+            console.log('Geolocation permission:', result.state);
+        });
+
+        navigator.permissions.query({ name: 'camera' }).then(result => {
+            console.log('Camera permission:', result.state);
+        });
+
+        navigator.permissions.query({ name: 'notifications' }).then(result => {
+            console.log('Notifications permission:', result.state);
+        });
+
+        // Geolocation API usage
+        function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(showPosition);
+            }
+        }
+
+        function showPosition(position) {
+            console.log('Latitude:', position.coords.latitude);
+        }
+
+        // Media devices usage
+        function startCamera() {
+            navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+                .then(stream => {
+                    console.log('Camera/Mic stream:', stream);
+                });
+        }
+
+        // Notifications
+        function requestNotify() {
+            Notification.requestPermission().then(permission => {
+                console.log('Notification permission:', permission);
+            });
+        }
+
+        // Dynamic permission request added after load
+        document.addEventListener('DOMContentLoaded', () => {
+            const container = document.querySelector('.permissions-section');
+            if (container) {
+                const dynamicBtn = document.createElement('button');
+                dynamicBtn.className = 'permission-btn dynamic-permission';
+                dynamicBtn.setAttribute('data-permission', 'clipboard-read');
+                dynamicBtn.textContent = 'Read Clipboard';
+                dynamicBtn.onclick = () => {
+                    navigator.clipboard.readText().then(text => {
+                        console.log('Clipboard content:', text);
+                    });
+                };
+                container.appendChild(dynamicBtn);
+            }
+        });
+    </script>
+
+    <!-- Simulated third-party tracker pixels/scripts that would set cookies -->
+    <img src="https://www.google-analytics.com/collect?v=1&tid=UA-12345-1&cid=123&t=pageview" width="1" height="1" alt="">
+    <img src="https://www.facebook.com/tr?id=12345&ev=PageView" width="1" height="1" alt="">
+</body>
+</html>
