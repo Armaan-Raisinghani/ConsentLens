@@ -4,11 +4,12 @@
  * Returns allow/ask/deny decisions with explanations
  */
 
-import type { ParsedRule, EngineDecision } from './types.js';
+import type { ParsedRule, EngineDecision, TTLType, TTLRule } from './types.js';
 import type { ConsentEvent } from '../ir/consent-event.js';
 import { matchRule } from './rule-matcher.js';
 import { PrecedenceEngine } from './precedence-engine.js';
 import { createFullRuleSets, getPack } from './policy-packs.js';
+import { TemporaryRuleManager } from './temporary-rules.js';
 
 /**
  * DecisionEngine class - evaluates rules against consent events using precedence engine
@@ -19,6 +20,7 @@ export class DecisionEngine {
   private trustedPackIds: string[];
   private communityPackIds: string[];
   private defaultPackId: string;
+  private temporaryRuleManager: TemporaryRuleManager;
 
   /**
    * Create a new DecisionEngine
@@ -37,6 +39,7 @@ export class DecisionEngine {
     this.trustedPackIds = [...trustedPacks];
     this.communityPackIds = [...communityPacks];
     this.defaultPackId = defaultPack;
+    this.temporaryRuleManager = new TemporaryRuleManager();
 
     // Validate pack IDs
     for (const packId of [...trustedPacks, ...communityPacks, defaultPack]) {
@@ -64,7 +67,59 @@ export class DecisionEngine {
    * @returns EngineDecision with decision, matched rule, layer, explanation, and confidence
    */
   decide(event: ConsentEvent): EngineDecision {
+    // Merge temporary rules into user layer before evaluation
+    this.mergeTemporaryRules();
     return this.precedenceEngine.evaluate(event);
+  }
+
+  /**
+   * Add a temporary rule that affects decisions
+   * @param rule - The parsed rule to add
+   * @param ttl - TTL type: 'session', '1hr', '24hr', or 'custom'
+   * @param customMs - Custom TTL in milliseconds (required for 'custom' type)
+   * @returns The generated rule ID
+   */
+  addTemporaryRule(rule: ParsedRule, ttl: TTLType, customMs?: number): string {
+    const ruleId = this.temporaryRuleManager.add(rule, ttl, customMs);
+    this.mergeTemporaryRules();
+    return ruleId;
+  }
+
+  /**
+   * Remove a temporary rule by ID
+   * @param ruleId - The rule ID to remove
+   * @returns true if rule was found and removed, false otherwise
+   */
+  removeTemporaryRule(ruleId: string): boolean {
+    const result = this.temporaryRuleManager.remove(ruleId);
+    if (result) {
+      this.mergeTemporaryRules();
+    }
+    return result;
+  }
+
+  /**
+   * Get all active temporary rules
+   * @returns Array of active TTLRule objects
+   */
+  getTemporaryRules(): TTLRule[] {
+    return this.temporaryRuleManager.getActive();
+  }
+
+  /**
+   * Merge temporary rules into user layer and rebuild precedence engine
+   */
+  private mergeTemporaryRules(): void {
+    const activeTempRules = this.temporaryRuleManager.getActive();
+    const combinedUserRules = [...this.userRules, ...activeTempRules];
+    
+    const ruleSets = createFullRuleSets(
+      combinedUserRules,
+      this.trustedPackIds,
+      this.communityPackIds,
+      this.defaultPackId
+    );
+    this.precedenceEngine = new PrecedenceEngine(ruleSets, matchRule);
   }
 
   /**

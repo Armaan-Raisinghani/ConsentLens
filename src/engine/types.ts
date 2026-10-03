@@ -102,6 +102,23 @@ export interface RuleSet {
 }
 
 /**
+ * TTL Type for temporary rules
+ */
+export type TTLType = 'session' | '1hr' | '24hr' | 'custom';
+
+/**
+ * TTL Rule interface extending ParsedRule with expiry information
+ */
+export interface TTLRule extends ParsedRule {
+  /** Expiry timestamp in milliseconds since epoch */
+  expiresAt: number;
+  /** TTL type */
+  ttlType: TTLType;
+  /** Creation timestamp in milliseconds since epoch */
+  createdAt: number;
+}
+
+/**
  * Generates a unique ID from a raw rule string
  */
 export function generateRuleId(raw: string): string {
