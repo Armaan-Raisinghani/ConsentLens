@@ -6,8 +6,9 @@
 import type { Capability } from '../ir/capability.js';
 import type { EvidenceCitation } from './evidence.js';
 
-// Re-export EvidenceCitation for convenience
+// Re-export EvidenceCitation and Capability for convenience
 export type { EvidenceCitation } from './evidence.js';
+export type { Capability } from '../ir/capability.js';
 
 /**
  * Purpose inference result from page analysis
@@ -35,6 +36,8 @@ export interface PermissionInterpretation {
   description: string;
   /** Sensitivity rating */
   sensitivity: 'high' | 'medium' | 'low';
+  /** Confidence score 0-1 */
+  confidence: number;
   /** Evidence citations */
   evidence: EvidenceCitation[];
 }

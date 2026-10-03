@@ -3,7 +3,6 @@
  * Matches Codiv API specification for System One classification
  */
 
-import type { Capability } from '../ir/capability.js';
 import type { ConsentEvent } from '../ir/consent-event.js';
 
 /**

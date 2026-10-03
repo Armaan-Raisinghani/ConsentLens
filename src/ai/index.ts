@@ -56,7 +56,12 @@ export {
 export { OpenJevClient, OpenJevError } from './openjev-client.js';
 export type { OpenJevClientConfig } from './openjev-client.js';
 
-// Note: Engines and backend adapter will be exported as they are implemented
+// AI Engines
+export { PurposeInferenceEngine } from './purpose-inference.js';
+export { PermissionInterpretationEngine } from './permission-interpretation.js';
+export { PolicyExtractionEngine } from './policy-extraction.js';
+export { TermsExtractionEngine } from './terms-extraction.js';
+export { MismatchReasoningEngine } from './mismatch-reasoning.js';
 
 // Fallback heuristics
 export { FallbackHeuristics } from './fallback-heuristics.js';

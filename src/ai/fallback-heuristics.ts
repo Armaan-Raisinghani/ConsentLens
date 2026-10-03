@@ -214,7 +214,7 @@ export class FallbackHeuristics {
       for (const pattern of patterns) {
         const regex = new RegExp(pattern, 'i');
         if (regex.test(lowerText)) {
-          const match = lowerText.match(new RegExp(`.{0,100}${pattern}.{0,100}`, 'i'));
+          lowerText.match(new RegExp(`.{0,100}${pattern}.{0,100}`, 'i'));
           practices.push({
             category,
             description: `${category} detected in policy`,
@@ -314,8 +314,21 @@ export class FallbackHeuristics {
       const relevantMatches = purposeKeywords.filter(k => capText.includes(k.toLowerCase()));
       const excessiveIndicators = ['admin', 'delete', 'write', 'manage', 'full', 'all'];
 
+      // High-sensitivity capabilities that are often excessive
+      const highSensitivityCapabilities = [
+        'camera',
+        'microphone',
+        'geolocation',
+        'clipboard-read',
+        'clipboard-write',
+      ];
+
+      // Check for excessive indicators regardless of relevance
+      const hasExcessiveIndicator = excessiveIndicators.some(e => capText.includes(e));
+      const hasHighSensitivityCap = highSensitivityCapabilities.some(c => capText.includes(c));
+
       if (relevantMatches.length > 0) {
-        if (excessiveIndicators.some(e => capText.includes(e))) {
+        if (hasExcessiveIndicator) {
           relevance = 'potentially-excessive';
           reasoning = `Capability (${this.getCapabilityText(event.capability)}) is relevant to ${purpose.inferred} but may request excessive permissions`;
         } else {
@@ -325,6 +338,12 @@ export class FallbackHeuristics {
       } else if (capText.includes('analytics') || capText.includes('tracking') || capText.includes('advertising')) {
         relevance = 'potentially-excessive';
         reasoning = `Analytics/tracking capability may be excessive for ${purpose.inferred} purpose`;
+      } else if (hasHighSensitivityCap) {
+        relevance = 'potentially-excessive';
+        reasoning = `High-sensitivity capability (${this.getCapabilityText(event.capability)}) may be excessive for ${purpose.inferred} purpose`;
+      } else if (hasExcessiveIndicator) {
+        relevance = 'potentially-excessive';
+        reasoning = `Capability (${this.getCapabilityText(event.capability)}) contains excessive permission indicators (${excessiveIndicators.filter(e => capText.includes(e)).join(', ')}) for ${purpose.inferred} purpose`;
       } else if (purposeKeywords.length > 0) {
         // Has purpose keywords but no direct match - unclear relevance
         relevance = 'unclear';

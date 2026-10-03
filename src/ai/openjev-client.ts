@@ -4,7 +4,6 @@
  */
 
 import type { ConsentEvent } from '../ir/consent-event.js';
-import type { Capability } from '../ir/capability.js';
 import type { PurposeInference } from './types.js';
 import type {
   OpenJevRequest,
@@ -20,7 +19,6 @@ import {
   buildSensitivityQuestion,
 } from './openjev-types.js';
 import type { OpenJevClassification } from './types.js';
-import type { EvidenceCitation } from './evidence.js';
 import { createOpenJevEvidence } from './evidence.js';
 
 /**
@@ -114,7 +112,7 @@ export class OpenJevClient {
       questions: { decision: question },
     };
 
-    const response = await this.callOpenJev(request);
+    const response = await this.request(request);
     const answer = response.answers['decision'] as NouAnswer;
     
     return this.parseClassification(event, answer, response);
@@ -132,7 +130,7 @@ export class OpenJevClient {
       questions: { excessiveness: question },
     };
 
-    const response = await this.callOpenJev(request);
+    const response = await this.request(request);
     const answer = response.answers['excessiveness'] as ChoiceAnswer;
     
     return this.parseClassification(event, answer, response);
@@ -153,7 +151,7 @@ export class OpenJevClient {
       questions: { purposeMatch: question },
     };
 
-    const response = await this.callOpenJev(request);
+    const response = await this.request(request);
     const answer = response.answers['purposeMatch'] as ChoiceAnswer;
     
     return this.parseClassification(event, answer, response);
@@ -171,7 +169,7 @@ export class OpenJevClient {
       questions: { sensitivity: question },
     };
 
-    const response = await this.callOpenJev(request);
+    const response = await this.request(request);
     const answer = response.answers['sensitivity'] as ScoreAnswer;
     
     return this.parseClassification(event, answer, response);
@@ -204,14 +202,15 @@ export class OpenJevClient {
       questions,
     };
 
-    const response = await this.callOpenJev(request);
+    const response = await this.request(request);
     return this.parseBatchResponse(events, response);
   }
 
   /**
    * Calls the OpenJev API with timeout and error handling
+   * Public method for custom requests from AI engines
    */
-  private async callOpenJev(request: OpenJevRequest): Promise<OpenJevResponse> {
+  async request(request: OpenJevRequest): Promise<OpenJevResponse> {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), this.timeout);
 
@@ -286,7 +285,7 @@ export class OpenJevClient {
   private parseClassification(
     event: ConsentEvent,
     answer: NouAnswer | ChoiceAnswer | ScoreAnswer,
-    response: OpenJevResponse
+    _response: OpenJevResponse
   ): OpenJevClassification {
     const evidence = [createOpenJevEvidence(this.extractConfidence(answer))];
 
