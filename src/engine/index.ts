@@ -9,6 +9,10 @@ export type {
   ParsedRule,
   MatchResult,
   EngineDecision,
+  TTLType,
+  TTLRule,
+  Explanation,
+  ExplanationDetail,
 } from './types.js';
 
 export {
@@ -34,3 +38,13 @@ export {
 export {
   DecisionEngine,
 } from './decision-engine.js';
+
+// Temporary Rules
+export {
+  TemporaryRuleManager,
+} from './temporary-rules.js';
+
+// Explanation
+export {
+  ExplanationGenerator,
+} from './explanation.js';
