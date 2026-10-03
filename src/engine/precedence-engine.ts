@@ -4,7 +4,7 @@
  * Exception rules (@@) override higher-precedence deny rules for matching capability@domain
  */
 
-import type { ParsedRule, RuleSet, EngineDecision, Decision, PrecedenceLayer } from './types.js';
+import type { ParsedRule, RuleSet, EngineDecision, PrecedenceLayer } from './types.js';
 import type { ConsentEvent } from '../ir/consent-event.js';
 import { matchRule } from './rule-matcher.js';
 

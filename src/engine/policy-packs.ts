@@ -7,24 +7,6 @@ import type { ParsedRule, RuleSet, PrecedenceLayer } from './types.js';
 import { parseRules } from './rule-parser.js';
 
 /**
- * PolicyPack interface - defines a named collection of rules
- */
-export interface PolicyPack {
-  /** Unique identifier */
-  id: string;
-  /** Human-readable name */
-  name: string;
-  /** Description of what this pack does */
-  description: string;
-  /** Version string */
-  version: string;
-  /** Array of rule strings in uBlock syntax */
-  rules: string[];
-  /** Precedence layer for this pack */
-  layer: PrecedenceLayer;
-}
-
-/**
  * BUILTIN_PACKS - 5 built-in policy packs per ENGINE-06
  * Layer assignment:
  * - 'trusted': no-ai-training (higher precedence than defaults)
@@ -62,9 +44,10 @@ export const BUILTIN_PACKS: PolicyPack[] = [
     layer: 'defaults',
     rules: [
       '! Strict Policy Pack',
-      '! Deny all cookies except essential',
-      'cookie.*@* = deny',
+      '! Allow essential cookies (must come before deny all)',
       'cookie.essential@* = allow',
+      '! Deny all other cookies',
+      'cookie.*@* = deny',
       '! Deny all OAuth',
       'oauth.*@* = deny',
       '! Deny sensitive browser permissions',

@@ -11,7 +11,7 @@ import {
   createFullRuleSets,
 } from '../../src/engine/policy-packs.js';
 import { parseRule } from '../../src/engine/rule-parser.js';
-import type { PolicyPack, RuleSet } from '../../src/engine/types.js';
+import type { RuleSet } from '../../src/engine/types.js';
 
 describe('Policy Packs - Built-in Packs', () => {
   it('should have exactly 5 built-in packs', () => {
