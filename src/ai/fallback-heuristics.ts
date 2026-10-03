@@ -227,7 +227,7 @@ export class FallbackHeuristics {
     }
 
     // Purpose extraction (simplified)
-    const purposePatterns = ['improve', 'personalize', 'analytics', 'marketing', 'security', 'legal', 'service'];
+    const purposePatterns = ['improve', 'personaliz', 'analytics', 'marketing', 'security', 'legal', 'service'];
     for (const p of purposePatterns) {
       if (lowerText.includes(p)) purposes.push(p);
     }
@@ -239,7 +239,7 @@ export class FallbackHeuristics {
     }
 
     // Retention patterns
-    const retentionMatch = lowerText.match(/retain.{0,50}(day|month|year|period)/i);
+    const retentionMatch = lowerText.match(/retain.{0,50}(day|month|year|years|period)/i);
     if (retentionMatch) retention = retentionMatch[0];
 
     const evidence: EvidenceCitation[] = [createOpenJevEvidence(0.4)];
@@ -267,7 +267,7 @@ export class FallbackHeuristics {
       { type: 'liability', patterns: ['limitation of liability', 'liable', 'liability', 'damages'], severity: 'medium' },
       { type: 'content-license', patterns: ['license', 'intellectual property', 'copyright', 'content license'], severity: 'high' },
       { type: 'termination', patterns: ['terminat', 'cancel', 'end this agreement'], severity: 'medium' },
-      { type: 'governing-law', patterns: ['governing law', 'jurisdiction', 'venue'], severity: 'low' },
+      { type: 'governing-law', patterns: ['governing law', 'governed by', 'jurisdiction', 'venue', 'laws of'], severity: 'low' },
     ];
 
     for (const { type, patterns, severity } of clausePatterns) {
