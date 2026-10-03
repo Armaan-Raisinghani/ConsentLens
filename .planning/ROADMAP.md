@@ -6,9 +6,9 @@
 
 ---
 
-### Phase 1: Consent IR + Adapter Framework
+### Phase 1: Consent IR + Adapter Framework + Plugin Architecture
 **Mode:** mvp
-**Goal:** Define unified ConsentEvent schema and build pluggable adapter system with 5 core adapters (OAuth, Browser Perms, Cookies, Policy, Terms)
+**Goal:** Define unified ConsentEvent schema, build pluggable adapter system with 5 core adapters (OAuth, Browser Perms, Cookies, Policy, Terms), and establish plugin architecture for community extensibility
 
 **Success Criteria:**
 1. TypeScript types for ConsentEvent, Capability, Purpose, Evidence, DecisionRecord compile without errors
@@ -16,8 +16,11 @@
 3. Each adapter extracts structured data from test HTML fixtures
 4. Adapter registry loads all adapters, runs them on a page, returns combined ConsentEvent[]
 5. Unit tests for each adapter pass
+6. **Plugin interfaces defined and working: registerAdapter, registerClassifier, registerPolicyExtractor, registerAIBackend, registerProvider**
+7. **Rule pack JSON schema defined; import/export config works**
+8. **Provider registry loads core 5 providers (Google, GitHub, Microsoft, Slack, Discord) from config**
 
-**Requirements:** IR-01..05, ADAPTER-01..06
+**Requirements:** IR-01..05, ADAPTER-01..06, PLUGIN-01..08
 
 ---
 
@@ -53,6 +56,7 @@
 7. All AI outputs include evidence citations (DOM selector, text span, policy section)
 8. Fallback heuristics when OpenJev unavailable
 9. Integration tests with mocked OpenJev responses
+10. **AI backend plugin interface works — can swap OpenJev for local LLM**
 
 **Requirements:** AI-01..08, OPENJEV-01..06
 
@@ -70,15 +74,15 @@
 5. IndexedDB schema for consent events, decisions, timestamps
 6. History queries: by capability, domain, date range
 7. Audit view: unused permissions, old consents, changed policies
-6. All reasoning outputs traceable to source events and AI classifications
+8. All reasoning outputs traceable to source events and AI classifications
 
 **Requirements:** CROSS-01..04, HIST-01..03
 
 ---
 
-### Phase 5: Chrome Extension (MV3) + Side Panel UI
+### Phase 5: Chrome Extension (MV3) + Side Panel UI + Settings
 **Mode:** mvp
-**Goal:** Working extension with content scripts, background worker, side panel demonstrating full loop
+**Goal:** Working extension with content scripts, background worker, side panel demonstrating full loop, and settings page for customization
 
 **Success Criteria:**
 1. Manifest V3 loads without errors
@@ -90,8 +94,9 @@
 7. Policy pack selector switches active pack, decisions update live
 8. History tab shows chronological analyzed pages with decisions
 9. Extension icons/badge reflect current page consent status
+10. **Settings page: manage providers, classifiers, rule packs, AI backends, import/export config**
 
-**Requirements:** EXT-01..08
+**Requirements:** EXT-01..09
 
 ---
 
@@ -109,6 +114,7 @@
 7. MIT license file
 8. GitHub repo initialized, all code committed
 9. 3-minute demo script recorded/written
+10. **CONTRIBUTING.md with provider/classifier/adapter contribution guides**
 
 **Requirements:** DEMO-01..04
 
@@ -117,15 +123,15 @@
 ## Phase Dependencies
 
 ```
-Phase 1 (IR + Adapters)
+Phase 1 (IR + Adapters + Plugins)
     ↓
 Phase 2 (Policy Engine) ──→ Phase 3 (AI + OpenJev)
     ↓                          ↓
     └──────→ Phase 4 (Cross-Source + History)
                 ↓
-            Phase 5 (Extension)
+            Phase 5 (Extension + Settings)
                 ↓
-            Phase 6 (Demo + Polish)
+            Phase 6 (Demo + Polish + Contributing)
 ```
 
 ---
@@ -139,16 +145,17 @@ Phase 2 (Policy Engine) ──→ Phase 3 (AI + OpenJev)
 | AI latency kills UX | OpenJev for fast classification; async AI reasoning; loading states |
 | 6-hour timebox | Strict phase time limits; cut v2 scope ruthlessly; engine first |
 | Adapter extraction fails on real sites | Test fixtures first; graceful degradation; log failures |
+| Plugin architecture over-engineering | Keep interfaces minimal; only expose what's needed for v1 |
 
 ---
 
 ## MVP Cut Line
 
 **Must Have (Phases 1-5 core):**
-- Consent IR, 5 adapters, policy engine, AI layer, OpenJev, cross-source, history, extension side panel
+- Consent IR, 5 adapters, **plugin architecture**, policy engine, AI layer, OpenJev, cross-source, history, extension side panel + settings
 
 **Nice to Have (Phase 6 + Polish):**
-- 4 demo sites, polished UX, README, license, demo script
+- 4 demo sites, polished UX, README, license, demo script, CONTRIBUTING.md
 
 **Cut Entirely (v2):**
 - Policy change detection, consent receipts, NL→policy compiler, community packs, Agent Skill, model harness, Firefox, DNR blocking

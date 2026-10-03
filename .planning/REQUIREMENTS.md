@@ -22,6 +22,17 @@
 - [ ] **ADAPTER-05**: Terms adapter finds terms of service links, extracts material clauses (arbitration, auto-renewal, liability, content licensing, termination)
 - [ ] **ADAPTER-06**: Adapter registry allows adding new consent mechanism extractors without engine changes
 
+### Plugin Architecture & Extensibility (Core Customizability)
+
+- [ ] **PLUGIN-01**: Adapter plugin interface — `registerAdapter(type, factory)` allows third-party adapters without core changes
+- [ ] **PLUGIN-02**: Classifier plugin interface — `registerClassifier(name, fn)` for custom cookie/tracker classification logic
+- [ ] **PLUGIN-03**: Policy extractor plugin interface — `registerPolicyExtractor(name, fn)` for custom policy parsing
+- [ ] **PLUGIN-04**: AI backend plugin interface — `registerAIBackend(name, { classify, extract, reason })` for swappable AI models
+- [ ] **PLUGIN-05**: Rule pack format — JSON schema with metadata (name, version, author, description, rules[], dependencies)
+- [ ] **PLUGIN-06**: Provider registry — `registerProvider(id, { name, authUrl, scopeMap, icon, color })` for OAuth providers
+- [ ] **PLUGIN-07**: Configuration schema — Single `consentlens.config.json` with all user-customizable settings
+- [ ] **PLUGIN-08**: Import/export API — `exportConfig()` / `importConfig(json)` for full portability
+
 ### Policy Engine
 
 - [ ] **ENGINE-01**: uBlock-style rule syntax: `capability[@domain] = action` where action ∈ {allow, ask, deny}
@@ -70,6 +81,7 @@
 - [ ] **EXT-06**: Side panel actions: Allow Once, Always Allow, Deny, Ask (creates temporary/user rule)
 - [ ] **EXT-07**: Policy pack selector in side panel header
 - [ ] **EXT-08**: Consent history view: chronological list of analyzed pages with decisions
+- [ ] **EXT-09**: Settings page: manage providers, classifiers, rule packs, AI backends, import/export config
 
 ### Consent History
 
@@ -97,6 +109,15 @@
 - [ ] **ADV-07**: Firefox Manifest V2/V3 port
 - [ ] **ADV-08**: DeclarativeNetRequest integration for actual blocking (not just analysis)
 
+### Community & Extensibility (v2)
+
+- [ ] **COMM-01**: Rule pack repository index format — `packs.json` with name, url, version, hash, description
+- [ ] **COMM-02**: Provider contribution template — docs + PR template for adding new OAuth providers
+- [ ] **COMM-03**: Classifier contribution guide — how to write custom cookie/tracker classifiers
+- [ ] **COMM-04**: Adapter development SDK — TypeScript types, test utilities, example adapters
+- [ ] **COMM-05**: Community rule pack gallery (GitHub Pages or similar) — discoverable, versioned packs
+- [ ] **COMM-06**: Automated testing for community contributions — CI validates pack format, provider config
+
 ## Out of Scope
 
 | Feature | Reason |
@@ -104,11 +125,11 @@
 | Real-time network interception | DNR API limited, DOM analysis covers consent surfaces |
 | Mobile browsers | Hackathon scope, desktop first |
 | Multi-browser | Chrome MV3 only for speed |
-| Remote policy sync | Local-first principle |
+| Remote policy sync | Local-first principle (import/export enables sharing) |
 | Legal advice | Liability, not legal counsel |
 | OAuth token revocation | Read-only analysis, user must revoke in provider dashboard |
-| Community rule hosting | Distribution infrastructure out of scope |
-| Custom model training | Use existing open-weight models |
+| Community rule hosting (centralized) | Distribution via Git/GitHub — standard OSS |
+| Fine-tuning/custom models | Use existing open-weight models |
 
 ## Traceability
 
@@ -116,20 +137,21 @@
 |-------------|-------|--------|
 | IR-01 to IR-05 | Phase 1 | Pending |
 | ADAPTER-01 to ADAPTER-06 | Phase 1 | Pending |
+| PLUGIN-01 to PLUGIN-08 | Phase 1 | Pending |
 | ENGINE-01 to ENGINE-08 | Phase 2 | Pending |
 | AI-01 to AI-08 | Phase 3 | Pending |
 | OPENJEV-01 to OPENJEV-06 | Phase 3 | Pending |
 | CROSS-01 to CROSS-04 | Phase 4 | Pending |
-| EXT-01 to EXT-08 | Phase 5 | Pending |
+| EXT-01 to EXT-09 | Phase 5 | Pending |
 | HIST-01 to HIST-03 | Phase 5 | Pending |
 | DEMO-01 to DEMO-04 | Phase 6 | Pending |
 
 **Coverage:**
-- v1 requirements: 38 total
-- Mapped to phases: 38
+- v1 requirements: 46 total (38 original + 8 plugin/extensibility)
+- Mapped to phases: 46
 - Unmapped: 0 ✓
 
 ---
 
 *Requirements defined: 2026-10-03*
-*Last updated: 2026-10-03 after initial definition*
+*Last updated: 2026-10-03 after adding extensibility requirements*
