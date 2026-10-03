@@ -15,12 +15,12 @@
 
 ### Adapter System
 
-- [ ] **ADAPTER-01**: OAuth adapter detects "Continue with [Provider]" buttons, extracts provider, requested scopes from OAuth URL/state
-- [ ] **ADAPTER-02**: Browser permission adapter detects Permissions API usage, navigator.permissions queries, permission request patterns in DOM
-- [ ] **ADAPTER-03**: Cookie adapter reads document.cookie, classifies cookies by name patterns and known tracker lists into categories
-- [ ] **ADAPTER-04**: Policy adapter finds privacy policy links, fetches content, extracts data practices, purposes, third parties, AI training, retention
-- [ ] **ADAPTER-05**: Terms adapter finds terms of service links, extracts material clauses (arbitration, auto-renewal, liability, content licensing, termination)
-- [ ] **ADAPTER-06**: Adapter registry allows adding new consent mechanism extractors without engine changes
+- [x] **ADAPTER-01**: OAuth adapter detects "Continue with [Provider]" buttons, extracts provider, requested scopes from OAuth URL/state
+- [x] **ADAPTER-02**: Browser permission adapter detects Permissions API usage, navigator.permissions queries, permission request patterns in DOM
+- [x] **ADAPTER-03**: Cookie adapter reads document.cookie, classifies cookies by name patterns and known tracker lists into categories
+- [x] **ADAPTER-04**: Policy adapter finds privacy policy links, fetches content, extracts data practices, purposes, third parties, AI training, retention
+- [x] **ADAPTER-05**: Terms adapter finds terms of service links, extracts material clauses (arbitration, auto-renewal, liability, content licensing, termination)
+- [x] **ADAPTER-06**: Adapter registry allows adding new consent mechanism extractors without engine changes
 
 ### Plugin Architecture & Extensibility (Core Customizability)
 
@@ -135,8 +135,8 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| IR-01 to IR-05 | Phase 1 | Pending |
-| ADAPTER-01 to ADAPTER-06 | Phase 1 | Pending |
+| IR-01 to IR-05 | Phase 1 | Partial |
+| ADAPTER-01 to ADAPTER-06 | Phase 1 | ✅ Complete |
 | PLUGIN-01 to PLUGIN-08 | Phase 1 | Pending |
 | ENGINE-01 to ENGINE-08 | Phase 2 | Pending |
 | AI-01 to AI-08 | Phase 3 | Pending |

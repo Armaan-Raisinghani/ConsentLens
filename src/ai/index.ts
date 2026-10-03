@@ -57,3 +57,10 @@ export { OpenJevClient, OpenJevError } from './openjev-client.js';
 export type { OpenJevClientConfig } from './openjev-client.js';
 
 // Note: Engines and backend adapter will be exported as they are implemented
+
+// Fallback heuristics
+export { FallbackHeuristics } from './fallback-heuristics.js';
+
+// Backend adapter
+export { OpenJevAIBackend, initializeOpenJevBackend, getDefaultOpenJevBackend } from './backend-adapter.js';
+export { registerAIBackend } from '../plugins/ai-backend-plugin.js';

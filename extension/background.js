@@ -28,7 +28,7 @@ const DEMO_EVENTS = [
   },
   {
     id: "evt-003",
-    website: "zoom.us",
+    website: "zoom.in",
     consentType: "browser-permission",
     capability: { type: "browser-permission", permission: "camera" },
     grantStatus: "granted",
@@ -39,7 +39,7 @@ const DEMO_EVENTS = [
   },
   {
     id: "evt-004",
-    website: "zoom.us",
+    website: "zoom.in",
     consentType: "browser-permission",
     capability: { type: "browser-permission", permission: "microphone" },
     grantStatus: "granted",
@@ -92,17 +92,6 @@ const DEMO_EVENTS = [
     riskLevel: "low",
     dataCollected: "Listening history, preferences",
     purpose: { stated: "Remember your preferences", inferred: "Music recommendation engine", confidence: 0.90 }
-  },
-  {
-    id: "evt-009",
-    website: "tiktok.com",
-    consentType: "browser-permission",
-    capability: { type: "browser-permission", permission: "notifications" },
-    grantStatus: "denied",
-    timestamp: "2026-10-03T12:30:00Z",
-    riskLevel: "low",
-    dataCollected: "Push notification delivery",
-    purpose: { stated: "Get notified about new content", inferred: "Re-engagement and retention", confidence: 0.82 }
   },
   {
     id: "evt-010",

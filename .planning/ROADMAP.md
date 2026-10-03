@@ -106,7 +106,7 @@ Plans:
 
 ---
 
-### Phase 5: Chrome Extension (MV3) + Side Panel UI + Settings
+### Phase 5: Chrome Extension (MV3) + Side Panelnew UI + Settings
 **Mode:** mvp
 **Goal:** Working extension with content scripts, background worker, side panel demonstrating full loop, and settings page for customization
 

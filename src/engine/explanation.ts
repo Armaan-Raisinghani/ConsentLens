@@ -29,7 +29,9 @@ function formatCapability(capability: Capability): string {
   if (isTermsCapability(capability)) {
     return `Terms: ${capability.clause}`;
   }
-  return `Unknown: ${capability.type}`;
+  // Exhaustiveness check
+  const _exhaustive: never = capability;
+  return `Unknown: ${_exhaustive}`;
 }
 
 /**
