@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ConsentLens</title>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --card-bg: #1e293b;
+      --card-hover: #334155;
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --primary: #3b82f6;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --success: #10b981;
+      --border: #334155;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      width: 420px;
+      max-height: 600px;
+      overflow-y: auto;
+      background-color: var(--bg);
+      color: var(--text-main);
+      font-size: 14px;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--card-hover); }
+
+    .header {
+      padding: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      background: rgba(15, 20, 25, 0.9);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .branding h1 {
+      font-size: 18px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .branding p {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .score-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .score-circle {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 700;
+      background: conic-gradient(var(--success) 0%, var(--success) var(--score-deg), var(--border) var(--score-deg));
+      position: relative;
+    }
+
+    .score-circle::after {
+      content: '';
+      position: absolute;
+      width: 40px;
+      height: 40px;
+      background: var(--bg);
+      border-radius: 50%;
+    }
+
+    .score-value {
+      position: relative;
+      z-index: 1;
+    }
+
+    .score-label {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .tabs {
+      display: flex;
+      padding: 12px 16px;
+      gap: 8px;
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto;
+    }
+
+    .tab-btn {
+      background: var(--card-bg);
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+      padding: 6px 12px;
+      border-radius: 16px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .tab-btn.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    .tab-btn:hover:not(.active) {
+      background: var(--card-hover);
+      color: var(--text-main);
+    }
+
+    .content-area {
+      padding: 16px;
+      position: relative;
+      min-height: 400px;
+    }
+
+    .tab-content {
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Dashboard Stats */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      padding: 12px;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .stat-val {
+      font-size: 20px;
+      font-weight: 700;
+      margin: 4px 0;
+    }
+
+    .stat-card.risk .stat-val { color: var(--danger); }
+    .stat-card.denied .stat-val { color: var(--warning); }
+    .stat-card.total .stat-val { color: var(--primary); }
+    .stat-card.sites .stat-val { color: var(--success); }
+
+    .stat-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Section Headers */
+    .section-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Event Cards */
+    .event-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 12px;
+      transition: all 0.2s;
+      border-left-width: 4px;
+      position: relative;
+    }
+
+    .event-card:hover {
+      background: var(--card-hover);
+      transform: translateY(-1px);
+    }
+
+    .event-card.risk-low { border-left-color: var(--success); }
+    .event-card.risk-medium { border-left-color: var(--warning); }
+    .event-card.risk-high { border-left-color: var(--danger); }
+
+    .event-card.revoked {
+      opacity: 0.6;
+      border-left-color: var(--text-muted);
+    }
+    .event-card.revoked .event-title {
+      text-decoration: line-through;
+    }
+
+    .event-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 8px;
+      gap: 8px;
+    }
+
+    .favicon {
+      width: 16px;
+      height: 16px;
+      border-radius: 2px;
+    }
+
+    .event-title {
+      font-weight: 600;
+      flex-grow: 1;
+      font-size: 13px;
+    }
+
+    .time-ago {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    .badge {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .badge-oauth { background: rgba(59, 130, 246, 0.2); color: var(--primary); }
+    .badge-cookie { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+    .badge-browser { background: rgba(139, 92, 246, 0.2); color: #a78bfa; }
+    .badge-policy { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
+    .badge-terms { background: rgba(148, 163, 184, 0.2); color: #94a3b8; }
+    
+    .badge-granted { background: rgba(16, 185, 129, 0.2); color: var(--success); }
+    .badge-denied { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
+
+    .event-details {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 8px;
+    }
+
+    .event-details strong {
+      color: var(--text-main);
+    }
+
+    .ai-warning, .purpose-warning {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 6px;
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      background: rgba(245, 158, 11, 0.1);
+      color: var(--warning);
+      border: 1px solid rgba(245, 158, 11, 0.2);
+    }
+
+    .revoke-btn {
+      position: absolute;
+      right: 12px;
+      bottom: 12px;
+      background: var(--danger);
+      color: white;
+      border: none;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .event-card:hover .revoke-btn {
+      opacity: 1;
+    }
+
+    .revoke-btn:hover {
+      background: #dc2626;
+    }
+
+    /* Risk Bar Chart */
+    .risk-bar {
+      display: flex;
+      height: 8px;
+      border-radius: 4px;
+      overflow: hidden;
+      margin: 12px 0;
+    }
+    
+    .risk-segment { height: 100%; transition: width 0.5s ease; }
+    .risk-segment.low { background: var(--success); }
+    .risk-segment.medium { background: var(--warning); }
+    .risk-segment.high { background: var(--danger); }
+    
+    .risk-legend {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* Filters */
+    .filters {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .filter-pill {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      cursor: pointer;
+    }
+    .filter-pill.active {
+      background: var(--border);
+      color: var(--text-main);
+    }
+
+    /* Settings Tab */
+    .setting-group {
+      margin-bottom: 24px;
+    }
+
+    .radio-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .radio-label {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 10px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .radio-label:hover { border-color: var(--primary); }
+    
+    .radio-label input[type="radio"] {
+      margin-top: 2px;
+      accent-color: var(--primary);
+    }
+
+    .radio-text {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .radio-text strong { font-size: 13px; }
+    .radio-text span { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+    .toggle-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .toggle-row:last-child { border-bottom: none; }
+
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 36px;
+      height: 20px;
+    }
+
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: var(--border);
+      transition: .4s;
+      border-radius: 20px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 14px;
+      width: 14px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider { background-color: var(--primary); }
+    input:checked + .slider:before { transform: translateX(16px); }
+
+    .dropdown {
+      width: 100%;
+      padding: 8px;
+      background: var(--card-bg);
+      color: var(--text-main);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      margin-top: 8px;
+      outline: none;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 10px;
+      border-radius: 6px;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 12px;
+      transition: background 0.2s;
+    }
+
+    .btn-secondary { background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border); }
+    .btn-secondary:hover { background: var(--card-hover); }
+    
+    .btn-danger-outline { background: transparent; color: var(--danger); border: 1px solid var(--danger); }
+    .btn-danger-outline:hover { background: rgba(239, 68, 68, 0.1); }
+
+    /* Expandable items */
+    .expandable-content {
+      display: none;
+      padding-top: 8px;
+      margin-top: 8px;
+      border-top: 1px solid var(--border);
+    }
+    .expand-btn {
+      background: none;
+      border: none;
+      color: var(--primary);
+      font-size: 11px;
+      cursor: pointer;
+      margin-top: 8px;
+      padding: 0;
+    }
+
+    /* Loader */
+    .loader {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 200px;
+    }
+    .spinner {
+      width: 24px;
+      height: 24px;
+      border: 3px solid rgba(59, 130, 246, 0.3);
+      border-radius: 50%;
+      border-top-color: var(--primary);
+      animation: spin 1s ease-in-out infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-muted);
+    }
+    .empty-state text { font-size: 40px; margin-bottom: 16px; display: block; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="branding">
+      <h1>🔍🛡️ ConsentLens</h1>
+      <p>Your Privacy Command Center</p>
+    </div>
+    <div class="score-container">
+      <div class="score-circle" id="privacy-score-circle" style="--score-deg: 0deg;">
+        <span class="score-value" id="privacy-score-val">--</span>
+      </div>
+      <div class="score-label">PRIVACY SCORE</div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
+    <button class="tab-btn" data-tab="permissions">Permissions</button>
+    <button class="tab-btn" data-tab="sites">Sites</button>
+    <button class="tab-btn" data-tab="settings">Settings</button>
+  </div>
+
+  <div class="content-area">
+    
+    <!-- Loader -->
+    <div id="loading" class="loader">
+      <div class="spinner"></div>
+    </div>
+
+    <!-- Dashboard Tab -->
+    <div id="tab-dashboard" class="tab-content">
+      <div class="stats-grid">
+        <div class="stat-card total">
+          <div class="stat-label">Total Perms</div>
+          <div class="stat-val" id="stat-total">0</div>
+        </div>
+        <div class="stat-card risk">
+          <div class="stat-label">High Risk</div>
+          <div class="stat-val" id="stat-risk">0</div>
+        </div>
+        <div class="stat-card denied">
+          <div class="stat-label">Denied</div>
+          <div class="stat-val" id="stat-denied">0</div>
+        </div>
+        <div class="stat-card sites">
+          <div class="stat-label">Sites Tracked</div>
+          <div class="stat-val" id="stat-sites">0</div>
+        </div>
+      </div>
+
+      <div class="section-title">Risk Breakdown</div>
+      <div class="risk-bar">
+        <div class="risk-segment low" id="bar-low" style="width: 0%"></div>
+        <div class="risk-segment medium" id="bar-medium" style="width: 0%"></div>
+        <div class="risk-segment high" id="bar-high" style="width: 0%"></div>
+      </div>
+      <div class="risk-legend">
+        <span id="leg-low">Low (0%)</span>
+        <span id="leg-med">Med (0%)</span>
+        <span id="leg-high">High (0%)</span>
+      </div>
+
+      <div class="section-title" style="margin-top: 24px;">Recent Activity</div>
+      <div id="recent-activity-list"></div>
+    </div>
+
+    <!-- Permissions Tab -->
+    <div id="tab-permissions" class="tab-content">
+      <div class="filters">
+        <button class="filter-pill active" data-filter="all">All</button>
+        <button class="filter-pill" data-filter="oauth">OAuth</button>
+        <button class="filter-pill" data-filter="cookie">Cookies</button>
+        <button class="filter-pill" data-filter="browser">Browser</button>
+        <button class="filter-pill" data-filter="policy">Policies</button>
+        <button class="filter-pill" data-filter="terms">Terms</button>
+      </div>
+      <div id="permissions-list"></div>
+    </div>
+
+    <!-- Sites Tab -->
+    <div id="tab-sites" class="tab-content">
+      <div id="sites-list"></div>
+    </div>
+
+    <!-- Settings Tab -->
+    <div id="tab-settings" class="tab-content">
+      <div class="setting-group">
+        <div class="section-title">Privacy Level</div>
+        <div class="radio-group">
+          <label class="radio-label">
+            <input type="radio" name="privacyLevel" value="strict">
+            <div class="radio-text">
+              <strong>Strict</strong>
+              <span>Auto-block ads & analytics, warn on all OAuth</span>
+            </div>
+          </label>
+          <label class="radio-label">
+            <input type="radio" name="privacyLevel" value="balanced" checked>
+            <div class="radio-text">
+              <strong>Balanced</strong>
+              <span>Block ad cookies, allow analytics, warn on high-risk</span>
+            </div>
+          </label>
+          <label class="radio-label">
+            <input type="radio" name="privacyLevel" value="permissive">
+            <div class="radio-text">
+              <strong>Permissive</strong>
+              <span>Allow most requests, tracking mode only</span>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <div class="setting-group">
+        <div class="section-title">Automation</div>
+        <div class="toggle-row">
+          <span>Auto-block advertising cookies</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="pref-block-ads" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="toggle-row">
+          <span>Auto-block analytics cookies</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="pref-block-analytics">
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="toggle-row">
+          <span>Show page scan indicator</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="pref-show-indicator" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="toggle-row">
+          <span>Notify on new consent requests</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="pref-notifications" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="setting-group">
+        <div class="section-title">Alert Threshold</div>
+        <select class="dropdown" id="pref-threshold">
+          <option value="low">Low Risk & Above</option>
+          <option value="medium" selected>Medium Risk & Above</option>
+          <option value="high">High Risk Only</option>
+        </select>
+      </div>
+
+      <div class="setting-group">
+        <button class="btn btn-secondary" id="btn-export">Export Privacy Report (JSON)</button>
+        <button class="btn btn-danger-outline" id="btn-clear">Clear All Data</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Mock data for initial rendering in case background is not available (dev mode)
+    let mockEvents = [
+      { id: '1', site: 'example.com', type: 'oauth', risk: 'high', status: 'granted', timestamp: Date.now() - 3600000, capability: 'Read Email', dataCollected: 'Email address, Profile', statedPurpose: 'Login', inferredPurpose: 'Marketing targeting', confidence: 0.6, aiTrainingUse: true },
+      { id: '2', site: 'shop.net', type: 'cookie', risk: 'medium', status: 'granted', timestamp: Date.now() - 86400000, capability: 'Cross-site tracking', dataCollected: 'Browsing history', statedPurpose: 'Analytics', inferredPurpose: 'Analytics', confidence: 0.9, aiTrainingUse: false },
+      { id: '3', site: 'news.org', type: 'browser', risk: 'low', status: 'denied', timestamp: Date.now() - 172800000, capability: 'Notifications', dataCollected: 'None', statedPurpose: 'Alerts', inferredPurpose: 'Alerts', confidence: 0.95, aiTrainingUse: false },
+      { id: '4', site: 'social.com', type: 'policy', risk: 'high', status: 'granted', timestamp: Date.now() - 500000, capability: 'Data sharing', dataCollected: 'All activity', statedPurpose: 'Improve service', inferredPurpose: 'AI Model Training', confidence: 0.85, aiTrainingUse: true },
+      { id: '5', site: 'app.io', type: 'terms', risk: 'low', status: 'granted', timestamp: Date.now() - 10000, capability: 'Account creation', dataCollected: 'Basic profile', statedPurpose: 'Service delivery', inferredPurpose: 'Service delivery', confidence: 0.9, aiTrainingUse: false }
+    ];
+    let mockPrefs = {
+      privacyLevel: 'balanced',
+      blockAds: true,
+      blockAnalytics: false,
+      showIndicator: true,
+      notifications: true,
+      threshold: 'medium'
+    };
+
+    // State
+    let events = [];
+    let preferences = {};
+    let currentFilter = 'all';
+
+    // Normalize events from background format to popup format
+    function normalizeEvent(e) {
+      // If already normalized (mock data), return as-is
+      if (e.site) return e;
+      
+      // Map capability object to readable string
+      let capStr = '';
+      const cap = e.capability || {};
+      if (cap.type === 'oauth') capStr = (cap.scope || []).join(', ');
+      else if (cap.type === 'browser-permission') capStr = cap.permission || '';
+      else if (cap.type === 'cookie') capStr = `${cap.category || ''} cookie${cap.name ? ` (${cap.name})` : ''}`;
+      else if (cap.type === 'policy') capStr = cap.practice || '';
+      else if (cap.type === 'terms') capStr = cap.clause || '';
+
+      // Map consentType to short type used by popup badges
+      let typeStr = e.consentType || cap.type || 'unknown';
+      if (typeStr === 'browser-permission') typeStr = 'browser';
+
+      const purpose = e.purpose || {};
+
+      return {
+        id: e.id,
+        site: e.website || '',
+        type: typeStr,
+        risk: e.riskLevel || 'low',
+        status: e.grantStatus || 'unknown',
+        timestamp: new Date(e.timestamp).getTime(),
+        capability: capStr,
+        dataCollected: e.dataCollected || '',
+        statedPurpose: purpose.stated || '',
+        inferredPurpose: purpose.inferred || '',
+        confidence: purpose.confidence || 1,
+        aiTrainingUse: !!e.aiTrainingUse,
+      };
+    }
+
+    // Utility: Send message to background
+    function sendMessage(action, data = {}) {
+      return new Promise((resolve) => {
+        if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+          chrome.runtime.sendMessage({ action, ...data }, resolve);
+        } else {
+          // Fallback for local testing outside extension
+          console.log(`[Mock] Action: ${action}`, data);
+          if (action === 'getEvents') resolve({ events: mockEvents });
+          else if (action === 'getPreferences') resolve({ preferences: mockPrefs });
+          else if (action === 'revokeConsent') {
+            const ev = mockEvents.find(e => e.id === data.eventId);
+            if (ev) ev.status = 'revoked';
+            resolve({ success: true });
+          }
+          else if (action === 'clearData') {
+            mockEvents = [];
+            resolve({ success: true });
+          }
+          else if (action === 'resetDemo') resolve({ success: true });
+          else resolve({ success: true });
+        }
+      });
+    }
+
+    // Initialization
+    async function init() {
+      // Show loader
+      document.getElementById('loading').style.display = 'flex';
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+
+      // Fetch data
+      const evRes = await sendMessage('getEvents');
+      if (evRes && evRes.events) {
+        events = evRes.events.map(normalizeEvent).sort((a,b) => b.timestamp - a.timestamp);
+      }
+      
+      const prefRes = await sendMessage('getPreferences');
+      if (prefRes && prefRes.preferences) {
+        // Normalize preference keys
+        const p = prefRes.preferences;
+        preferences = {
+          privacyLevel: p.privacyLevel || 'balanced',
+          blockAds: p.blockAds ?? p.autoBlock?.advertising ?? true,
+          blockAnalytics: p.blockAnalytics ?? p.autoBlock?.analytics ?? false,
+          showIndicator: p.showIndicator ?? true,
+          notifications: p.notifications ?? true,
+          threshold: p.threshold ?? p.riskThreshold ?? 'medium',
+        };
+      }
+
+      // Hide loader and show default tab
+      document.getElementById('loading').style.display = 'none';
+      switchTab('dashboard');
+
+      renderAll();
+      setupEventListeners();
+    }
+
+    // Render functions
+    function renderAll() {
+      calculateAndRenderScore();
+      renderDashboard();
+      renderPermissions();
+      renderSites();
+      renderSettings();
+    }
+
+    function calculateAndRenderScore() {
+      if (!events.length) {
+        setScoreUI(100);
+        return;
+      }
+      
+      let score = 100;
+      let totalRiskWeight = 0;
+      
+      events.forEach(e => {
+        if (e.status === 'granted') {
+          if (e.risk === 'high') totalRiskWeight += 15;
+          else if (e.risk === 'medium') totalRiskWeight += 5;
+          else if (e.risk === 'low') totalRiskWeight += 1;
+        }
+      });
+
+      // Normalize score
+      score = Math.max(0, Math.min(100, 100 - totalRiskWeight));
+      setScoreUI(Math.round(score));
+    }
+
+    function setScoreUI(score) {
+      const circle = document.getElementById('privacy-score-circle');
+      const val = document.getElementById('privacy-score-val');
+      
+      let color = 'var(--success)';
+      if (score < 50) color = 'var(--danger)';
+      else if (score < 80) color = 'var(--warning)';
+
+      // Animate score counting
+      let current = 0;
+      const interval = setInterval(() => {
+        current += 2;
+        if (current >= score) {
+          current = score;
+          clearInterval(interval);
+        }
+        val.innerText = current;
+        
+        const deg = (current / 100) * 360;
+        circle.style.background = `conic-gradient(${color} 0%, ${color} ${deg}deg, var(--border) ${deg}deg)`;
+        val.style.color = color;
+      }, 20);
+    }
+
+    function renderDashboard() {
+      const total = events.length;
+      const highRisk = events.filter(e => e.risk === 'high' && e.status === 'granted').length;
+      const denied = events.filter(e => e.status === 'denied').length;
+      const sites = new Set(events.map(e => e.site)).size;
+
+      document.getElementById('stat-total').innerText = total;
+      document.getElementById('stat-risk').innerText = highRisk;
+      document.getElementById('stat-denied').innerText = denied;
+      document.getElementById('stat-sites').innerText = sites;
+
+      // Risk Bar
+      const granted = events.filter(e => e.status === 'granted');
+      const gTotal = granted.length || 1; // avoid div by 0
+      const lowP = (granted.filter(e => e.risk === 'low').length / gTotal) * 100;
+      const medP = (granted.filter(e => e.risk === 'medium').length / gTotal) * 100;
+      const highP = (granted.filter(e => e.risk === 'high').length / gTotal) * 100;
+
+      setTimeout(() => {
+        document.getElementById('bar-low').style.width = `${lowP}%`;
+        document.getElementById('bar-medium').style.width = `${medP}%`;
+        document.getElementById('bar-high').style.width = `${highP}%`;
+      }, 100);
+
+      document.getElementById('leg-low').innerText = `Low (${Math.round(lowP)}%)`;
+      document.getElementById('leg-med').innerText = `Med (${Math.round(medP)}%)`;
+      document.getElementById('leg-high').innerText = `High (${Math.round(highP)}%)`;
+
+      // Recent Activity
+      const list = document.getElementById('recent-activity-list');
+      list.innerHTML = '';
+      if (events.length === 0) {
+        list.innerHTML = '<div class="empty-state">No activity yet</div>';
+        return;
+      }
+      events.slice(0, 5).forEach(e => {
+        list.appendChild(createEventCard(e));
+      });
+    }
+
+    function renderPermissions() {
+      const list = document.getElementById('permissions-list');
+      list.innerHTML = '';
+      
+      const filtered = currentFilter === 'all' 
+        ? events 
+        : events.filter(e => e.type === currentFilter);
+
+      if (filtered.length === 0) {
+        list.innerHTML = '<div class="empty-state">No permissions found matching this filter</div>';
+        return;
+      }
+
+      filtered.forEach(e => {
+        list.appendChild(createEventCard(e, true));
+      });
+    }
+
+    function renderSites() {
+      const list = document.getElementById('sites-list');
+      list.innerHTML = '';
+
+      const siteMap = {};
+      events.forEach(e => {
+        if (!siteMap[e.site]) siteMap[e.site] = [];
+        siteMap[e.site].push(e);
+      });
+
+      const sites = Object.keys(siteMap).sort();
+      if (sites.length === 0) {
+        list.innerHTML = '<div class="empty-state">No sites tracked yet</div>';
+        return;
+      }
+
+      sites.forEach(site => {
+        const siteEvents = siteMap[site];
+        const highRisk = siteEvents.filter(e => e.risk === 'high' && e.status === 'granted').length;
+        
+        const el = document.createElement('div');
+        el.className = `event-card ${highRisk > 0 ? 'risk-high' : 'risk-low'}`;
+        el.innerHTML = `
+          <div class="event-header" style="cursor: pointer;" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'block' ? 'none' : 'block'">
+            <img class="favicon" src="https://www.google.com/s2/favicons?domain=${site}&sz=32" alt="">
+            <div class="event-title">${site}</div>
+            <div class="time-ago">${siteEvents.length} items</div>
+          </div>
+          <div class="expandable-content" style="display: none;">
+            ${siteEvents.map(e => `
+              <div style="font-size: 12px; margin-bottom: 4px; display: flex; justify-content: space-between;">
+                <span>• ${e.type} - ${e.capability}</span>
+                <span class="badge badge-${e.status === 'granted' ? 'granted' : e.status === 'denied' ? 'denied' : 'terms'}">${e.status}</span>
+              </div>
+            `).join('')}
+          </div>
+        `;
+        list.appendChild(el);
+      });
+    }
+
+    function renderSettings() {
+      // Sync UI with preferences object
+      document.querySelectorAll('input[name="privacyLevel"]').forEach(el => {
+        if (el.value === preferences.privacyLevel) el.checked = true;
+      });
+      document.getElementById('pref-block-ads').checked = preferences.blockAds;
+      document.getElementById('pref-block-analytics').checked = preferences.blockAnalytics;
+      document.getElementById('pref-show-indicator').checked = preferences.showIndicator;
+      document.getElementById('pref-notifications').checked = preferences.notifications;
+      document.getElementById('pref-threshold').value = preferences.threshold || 'medium';
+    }
+
+    // Helper: Create DOM for an event card
+    function createEventCard(e, detailed = false) {
+      const card = document.createElement('div');
+      card.className = `event-card risk-${e.risk} ${e.status === 'revoked' ? 'revoked' : ''}`;
+      
+      const timeStr = getTimeAgo(e.timestamp);
+      const isGranted = e.status === 'granted';
+
+      // Purpose mismatch warning
+      let purposeWarnHTML = '';
+      if (e.confidence && e.confidence < 0.8 && e.inferredPurpose) {
+        purposeWarnHTML = `<div class="purpose-warning">⚠️ Stated: ${e.statedPurpose} vs Inferred: ${e.inferredPurpose}</div>`;
+      }
+
+      // AI warning
+      let aiWarnHTML = '';
+      if (e.aiTrainingUse) {
+        aiWarnHTML = `<div class="ai-warning">🤖 Data may be used for AI training</div>`;
+      }
+
+      card.innerHTML = `
+        <div class="event-header">
+          <img class="favicon" src="https://www.google.com/s2/favicons?domain=${e.site}&sz=32" alt="" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌐</text></svg>'">
+          <div class="event-title">${e.site}</div>
+          <span class="badge badge-${e.type}">${e.type}</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+          <div style="font-size: 13px;">${e.capability || e.statedPurpose}</div>
+          <div class="time-ago">${timeStr}</div>
+        </div>
+        <div style="display: flex; gap: 4px;">
+          <span class="badge badge-${isGranted ? 'granted' : e.status === 'denied' ? 'denied' : 'terms'}">${e.status}</span>
+          ${detailed ? `<button class="expand-btn" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'block' ? 'none' : 'block'">Details ▼</button>
+          <div class="expandable-content">
+            <div class="event-details">
+              <div><strong>Data:</strong> ${e.dataCollected || 'Unknown'}</div>
+              <div><strong>Risk:</strong> <span style="text-transform: capitalize">${e.risk}</span></div>
+            </div>
+            ${purposeWarnHTML}
+            ${aiWarnHTML}
+          </div>` : ''}
+        </div>
+        ${isGranted ? `<button class="revoke-btn" data-id="${e.id}">Revoke</button>` : ''}
+      `;
+
+      // Attach revoke handler
+      const revokeBtn = card.querySelector('.revoke-btn');
+      if (revokeBtn) {
+        revokeBtn.addEventListener('click', async (evt) => {
+          evt.stopPropagation();
+          revokeBtn.innerText = 'Revoking...';
+          await sendMessage('revokeConsent', { eventId: e.id });
+          e.status = 'revoked';
+          renderAll(); // Re-render to show updated status
+        });
+      }
+
+      return card;
+    }
+
+    // Tab Switching
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === tabId);
+      });
+      document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+      });
+      document.getElementById(`tab-${tabId}`).classList.add('active');
+    }
+
+    // Setup Event Listeners
+    function setupEventListeners() {
+      // Tabs
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+      });
+
+      // Filters
+      document.querySelectorAll('.filter-pill').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          currentFilter = btn.dataset.filter;
+          renderPermissions();
+        });
+      });
+
+      // Settings Changes
+      const updateSettings = () => {
+        preferences = {
+          privacyLevel: document.querySelector('input[name="privacyLevel"]:checked').value,
+          blockAds: document.getElementById('pref-block-ads').checked,
+          blockAnalytics: document.getElementById('pref-block-analytics').checked,
+          showIndicator: document.getElementById('pref-show-indicator').checked,
+          notifications: document.getElementById('pref-notifications').checked,
+          threshold: document.getElementById('pref-threshold').value
+        };
+        sendMessage('updatePreferences', { preferences });
+      };
+
+      document.querySelectorAll('input[name="privacyLevel"]').forEach(el => el.addEventListener('change', updateSettings));
+      ['pref-block-ads', 'pref-block-analytics', 'pref-show-indicator', 'pref-notifications'].forEach(id => {
+        document.getElementById(id).addEventListener('change', updateSettings);
+      });
+      document.getElementById('pref-threshold').addEventListener('change', updateSettings);
+
+      // Export
+      document.getElementById('btn-export').addEventListener('click', () => {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(events, null, 2));
+        const downloadAnchorNode = document.createElement('a');
+        downloadAnchorNode.setAttribute("href", dataStr);
+        downloadAnchorNode.setAttribute("download", "privacy_report.json");
+        document.body.appendChild(downloadAnchorNode);
+        downloadAnchorNode.click();
+        downloadAnchorNode.remove();
+      });
+
+      // Clear Data
+      document.getElementById('btn-clear').addEventListener('click', async () => {
+        if (confirm("Are you sure you want to clear all consent data?")) {
+          await sendMessage('clearAllData');
+          events = [];
+          renderAll();
+        }
+      });
+    }
+
+    // Utility
+    function getTimeAgo(ts) {
+      const diff = Date.now() - ts;
+      const mins = Math.floor(diff / 60000);
+      if (mins < 60) return `${mins}m ago`;
+      const hrs = Math.floor(mins / 60);
+      if (hrs < 24) return `${hrs}h ago`;
+      return `${Math.floor(hrs / 24)}d ago`;
+    }
+
+    // Start
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
