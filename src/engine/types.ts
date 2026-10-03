@@ -119,6 +119,40 @@ export interface TTLRule extends ParsedRule {
 }
 
 /**
+ * Explanation interface - human-readable decision explanation
+ */
+export interface Explanation {
+  /** The decision made */
+  decision: Decision;
+  /** The matched rule string (raw) */
+  matchedRule: string;
+  /** The precedence layer where the match was found */
+  matchedLayer: PrecedenceLayer | 'exception';
+  /** Capability being requested */
+  capability: string;
+  /** Domain where the request originated */
+  domain: string;
+  /** The action taken */
+  action: Decision;
+  /** Confidence score (0-1) */
+  confidence: number;
+  /** Human-readable explanation string */
+  humanReadable: string;
+  /** Evidence from the consent event */
+  evidence: string[];
+}
+
+/**
+ * Explanation detail for structured breakdown
+ */
+export type ExplanationDetail = {
+  ruleType: 'user' | 'trusted' | 'community' | 'defaults' | 'exception';
+  ruleString: string;
+  layer: string;
+  reason: string;
+};
+
+/**
  * Generates a unique ID from a raw rule string
  */
 export function generateRuleId(raw: string): string {

@@ -4,12 +4,15 @@
  * Returns allow/ask/deny decisions with explanations
  */
 
-import type { ParsedRule, EngineDecision, TTLType, TTLRule } from './types.js';
+import type { ParsedRule, EngineDecision, TTLType, TTLRule, Explanation } from './types.js';
 import type { ConsentEvent } from '../ir/consent-event.js';
+import type { DecisionRecord } from '../ir/decision-record.js';
 import { matchRule } from './rule-matcher.js';
 import { PrecedenceEngine } from './precedence-engine.js';
 import { createFullRuleSets, getPack } from './policy-packs.js';
 import { TemporaryRuleManager } from './temporary-rules.js';
+import { ExplanationGenerator } from './explanation.js';
+import { createDecisionRecord } from '../ir/decision-record.js';
 
 /**
  * DecisionEngine class - evaluates rules against consent events using precedence engine
@@ -21,6 +24,7 @@ export class DecisionEngine {
   private communityPackIds: string[];
   private defaultPackId: string;
   private temporaryRuleManager: TemporaryRuleManager;
+  private explanationGenerator: ExplanationGenerator;
 
   /**
    * Create a new DecisionEngine
@@ -40,6 +44,7 @@ export class DecisionEngine {
     this.communityPackIds = [...communityPacks];
     this.defaultPackId = defaultPack;
     this.temporaryRuleManager = new TemporaryRuleManager();
+    this.explanationGenerator = new ExplanationGenerator();
 
     // Validate pack IDs
     for (const packId of [...trustedPacks, ...communityPacks, defaultPack]) {
@@ -104,6 +109,34 @@ export class DecisionEngine {
    */
   getTemporaryRules(): TTLRule[] {
     return this.temporaryRuleManager.getActive();
+  }
+
+  /**
+   * Decide on a ConsentEvent and generate a human-readable explanation
+   * @param event - The consent event to evaluate
+   * @returns Object with decision and explanation
+   */
+  decideWithExplanation(event: ConsentEvent): { decision: EngineDecision; explanation: Explanation } {
+    // Merge temporary rules into user layer before evaluation
+    this.mergeTemporaryRules();
+    const decision = this.precedenceEngine.evaluate(event);
+    const explanation = this.explanationGenerator.generate(decision, event);
+    return { decision, explanation };
+  }
+
+  /**
+   * Create a DecisionRecord with explanation data for a ConsentEvent
+   * @param event - The consent event that was evaluated
+   * @returns DecisionRecord with matched rule, confidence, and explanation
+   */
+  createDecisionRecord(event: ConsentEvent): DecisionRecord {
+    const { explanation } = this.decideWithExplanation(event);
+    return createDecisionRecord({
+      matchedRule: explanation.matchedRule,
+      confidence: explanation.confidence,
+      engine: 'deterministic-policy-engine',
+      version: '0.1.0',
+    });
   }
 
   /**
