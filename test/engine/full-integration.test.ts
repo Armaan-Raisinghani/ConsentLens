@@ -258,7 +258,8 @@ describe('Full Integration: AdapterRegistry → DecisionEngine', () => {
     
     if (!advertisingEvent) {
       // Create a mock advertising cookie event for localhost
-      const { createCookieCapability, createConsentEvent } = await import('../../src/ir/consent-event.js');
+      const { createConsentEvent } = await import('../../src/ir/consent-event.js');
+      const { createCookieCapability } = await import('../../src/ir/capability.js');
       advertisingEvent = createConsentEvent({
         website: 'http://localhost:3000',
         consentType: ConsentType.Cookie,
@@ -286,8 +287,9 @@ describe('Full Integration: AdapterRegistry → DecisionEngine', () => {
     // Verify temporary rule appears in getTemporaryRules
     const tempRules = engine.getTemporaryRules();
     expect(tempRules.length).toBe(1);
-    expect(tempRules[0].id).toBe(ruleId);
-    expect(tempRules[0].ttlType).toBe('1hr');
+    const ttlRule = tempRules[0]!;
+    expect(ttlRule.id).toBe(ruleId);
+    expect(ttlRule.ttlType).toBe('1hr');
   });
 
   it('should support NoAITraining trusted pack overriding Balanced defaults', async () => {
@@ -347,15 +349,17 @@ describe('All engine tests pass together', () => {
     // The actual test running is done by vitest, but we can verify
     // the test files exist and can be imported
     const { parseRule } = await import('../../src/engine/rule-parser.js');
-    const { matchRule } = await import('../../src/engine/rule-matcher.js');
     const { DecisionEngine } = await import('../../src/engine/decision-engine.js');
     const { TemporaryRuleManager } = await import('../../src/engine/temporary-rules.js');
     const { ExplanationGenerator } = await import('../../src/engine/explanation.js');
+    // eslint-disable-next-line @typescript-eslint/consistent-type-imports
+    type ConsentEvent = import('../../src/ir/consent-event.js').ConsentEvent;
     
     // Basic smoke test
     const engine = new DecisionEngine([], [], [], 'balanced');
     const tempManager = new TemporaryRuleManager();
-    const explGenerator = new ExplanationGenerator();
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const _explGenerator = new ExplanationGenerator();
     
     const rule = parseRule('oauth.google@* = deny');
     expect(rule).toBeDefined();
@@ -370,7 +374,7 @@ describe('All engine tests pass together', () => {
       timestamp: new Date().toISOString(),
       grantStatus: 0, // Pending
       evidence: [],
-    } as any);
+    } as unknown as ConsentEvent);
     
     expect(decision).toBeDefined();
   });

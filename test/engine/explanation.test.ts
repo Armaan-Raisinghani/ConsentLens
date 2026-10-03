@@ -7,12 +7,13 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { parseRule } from '../../src/engine/rule-parser.js';
 import { ExplanationGenerator } from '../../src/engine/explanation.js';
 import { DecisionEngine } from '../../src/engine/decision-engine.js';
-import type { ConsentEvent } from '../../src/ir/consent-event.js';
 import { createConsentEvent } from '../../src/ir/consent-event.js';
 import { createOAuthCapability, createCookieCapability, createBrowserPermissionCapability, createPolicyCapability, createTermsCapability } from '../../src/ir/capability.js';
-import { ConsentType, GrantStatus } from '../../src/shared/types.js';
+import { ConsentType } from '../../src/shared/types.js';
 import { createDOMEvidence } from '../../src/ir/evidence.js';
-import { EvidenceSource, ExtractionMethod } from '../../src/shared/types.js';
+import { ExtractionMethod } from '../../src/shared/types.js';
+import type { EngineDecision, ParsedRule } from '../../src/engine/types.js';
+import type { ConsentEvent } from '../../src/ir/consent-event.js';
 
 // Helper to create a mock ConsentEvent
 function createMockEvent(overrides: Partial<ConsentEvent> = {}): ConsentEvent {
@@ -20,35 +21,53 @@ function createMockEvent(overrides: Partial<ConsentEvent> = {}): ConsentEvent {
     website: 'http://example.com',
     consentType: ConsentType.OAuth,
     capability: createOAuthCapability('google', ['profile', 'email']),
-    evidence: [createDOMEvidence({ source: EvidenceSource.DOM, selector: 'test', text: 'test', confidence: 1, extractionMethod: ExtractionMethod.TextContent })],
+    evidence: [createDOMEvidence({ selector: 'test', text: 'test', confidence: 1, extractionMethod: ExtractionMethod.TextContent })],
     ...overrides,
   });
 }
 
+// Helper to create a mock ParsedRule
+function createMockRule(overrides: Partial<ParsedRule> = {}): ParsedRule {
+  return {
+    id: 'rule_mock',
+    raw: 'oauth.google@* = deny',
+    capabilityPattern: 'oauth.google',
+    domainPattern: '*',
+    action: 'deny',
+    isException: false,
+    precedenceLayer: 'user',
+    ...overrides,
+  };
+}
+
+// Helper to create a mock EngineDecision
+function createMockDecision(overrides: Partial<EngineDecision> = {}): EngineDecision {
+  return {
+    decision: 'deny',
+    matchedRule: createMockRule(),
+    matchedLayer: 'user',
+    explanation: "Layer 'user': matched rule \"oauth.google@* = deny\" → deny",
+    confidence: 1.0,
+    ...overrides,
+  };
+}
+
 describe('ExplanationGenerator', () => {
   let generator: ExplanationGenerator;
-  let mockDecision: {
-    decision: 'allow' | 'ask' | 'deny';
-    matchedRule?: { raw: string; capabilityPattern: string; domainPattern: string };
-    matchedLayer: 'user' | 'trusted' | 'community' | 'defaults' | 'exception';
-    explanation: string;
-    confidence: number;
-  };
 
   beforeEach(() => {
     generator = new ExplanationGenerator();
-    mockDecision = {
-      decision: 'deny',
-      matchedRule: { raw: 'oauth.google@drive.google.com = deny', capabilityPattern: 'oauth.google', domainPattern: 'drive.google.com' },
-      matchedLayer: 'user',
-      explanation: "Layer 'user': matched rule \"oauth.google@drive.google.com = deny\" → deny",
-      confidence: 1.0,
-    };
   });
 
   it('should generate explanation for user deny rule', () => {
     const event = createMockEvent({
       capability: createOAuthCapability('google', ['profile']),
+    });
+    
+    const mockDecision = createMockDecision({
+      decision: 'deny',
+      matchedRule: createMockRule({ raw: 'oauth.google@drive.google.com = deny', capabilityPattern: 'oauth.google', domainPattern: 'drive.google.com' }),
+      matchedLayer: 'user',
     });
     
     const explanation = generator.generate(mockDecision, event);
@@ -67,12 +86,11 @@ describe('ExplanationGenerator', () => {
   });
 
   it('should generate explanation for exception allow', () => {
-    const exceptionDecision = {
-      ...mockDecision,
-      decision: 'allow' as const,
-      matchedLayer: 'exception' as const,
-      matchedRule: { raw: '@@cookie.analytics@analytics.example.com', capabilityPattern: 'cookie.analytics', domainPattern: 'analytics.example.com' },
-    };
+    const exceptionDecision = createMockDecision({
+      decision: 'allow',
+      matchedLayer: 'exception',
+      matchedRule: createMockRule({ raw: '@@cookie.analytics@analytics.example.com', capabilityPattern: 'cookie.analytics', domainPattern: 'analytics.example.com', isException: true, action: 'allow' }),
+    });
     
     const event = createMockEvent({
       consentType: ConsentType.Cookie,
@@ -89,12 +107,11 @@ describe('ExplanationGenerator', () => {
   });
 
   it('should generate explanation for pack rule (Balanced)', () => {
-    const packDecision = {
-      ...mockDecision,
-      decision: 'ask' as const,
-      matchedLayer: 'defaults' as const,
-      matchedRule: { raw: 'cookie.analytics@* = ask', capabilityPattern: 'cookie.analytics', domainPattern: '*' },
-    };
+    const packDecision = createMockDecision({
+      decision: 'ask',
+      matchedLayer: 'defaults',
+      matchedRule: createMockRule({ raw: 'cookie.analytics@* = ask', capabilityPattern: 'cookie.analytics', domainPattern: '*', action: 'ask', precedenceLayer: 'defaults' }),
+    });
     
     const event = createMockEvent({
       consentType: ConsentType.Cookie,
@@ -111,13 +128,13 @@ describe('ExplanationGenerator', () => {
   });
 
   it('should generate explanation for no match', () => {
-    const noMatchDecision = {
-      decision: 'ask' as const,
+    const noMatchDecision = createMockDecision({
+      decision: 'ask',
       matchedRule: undefined,
-      matchedLayer: 'defaults' as const,
+      matchedLayer: 'defaults',
       explanation: 'No matching rules found in any layer',
       confidence: 0.5,
-    };
+    });
     
     const event = createMockEvent({
       capability: createOAuthCapability('unknown', ['profile']),
@@ -133,11 +150,12 @@ describe('ExplanationGenerator', () => {
   it('should include evidence from event in explanation', () => {
     const event = createMockEvent({
       evidence: [
-        createDOMEvidence({ source: EvidenceSource.DOM, selector: 'button#oauth', text: 'Sign in with Google', confidence: 0.95, extractionMethod: ExtractionMethod.TextContent }),
-        createDOMEvidence({ source: EvidenceSource.Heuristic, text: 'OAuth flow detected', confidence: 0.8, extractionMethod: ExtractionMethod.Heuristic }),
+        createDOMEvidence({ selector: 'button#oauth', text: 'Sign in with Google', confidence: 0.95, extractionMethod: ExtractionMethod.TextContent }),
+        createDOMEvidence({ selector: 'body', text: 'OAuth flow detected', confidence: 0.8, extractionMethod: ExtractionMethod.Heuristic }),
       ],
     });
     
+    const mockDecision = createMockDecision({ decision: 'deny' });
     const explanation = generator.generate(mockDecision, event);
     
     expect(explanation.evidence.length).toBe(2);
@@ -147,6 +165,8 @@ describe('ExplanationGenerator', () => {
   });
 
   it('should format capability strings correctly for all types', () => {
+    const mockDecision = createMockDecision({ decision: 'deny' });
+    
     const testCases = [
       { capability: createOAuthCapability('google', ['profile', 'email']), expected: 'OAuth: google' },
       { capability: createCookieCapability('analytics', '_ga'), expected: 'Cookie: analytics (_ga)' },
@@ -167,30 +187,38 @@ describe('ExplanationGenerator', () => {
       capability: createOAuthCapability('google', ['profile']),
     });
     
+    const mockDecision = createMockDecision({
+      decision: 'deny',
+      matchedRule: createMockRule({ raw: 'oauth.google@drive.google.com = deny', capabilityPattern: 'oauth.google', domainPattern: 'drive.google.com' }),
+      matchedLayer: 'user',
+    });
+    
     const details = generator.generateDetails(mockDecision, event);
     
     expect(details.length).toBe(1);
-    expect(details[0].ruleType).toBe('user');
-    expect(details[0].ruleString).toBe('oauth.google@drive.google.com = deny');
-    expect(details[0].layer).toBe('user');
-    expect(details[0].reason).toContain('Layer');
+    const detail = details[0]!;
+    expect(detail.ruleType).toBe('user');
+    expect(detail.ruleString).toBe('oauth.google@drive.google.com = deny');
+    expect(detail.layer).toBe('user');
+    expect(detail.reason).toContain('Layer');
   });
 
   it('should generate structured details for no match', () => {
-    const noMatchDecision = {
-      decision: 'ask' as const,
+    const noMatchDecision = createMockDecision({
+      decision: 'ask',
       matchedRule: undefined,
-      matchedLayer: 'defaults' as const,
+      matchedLayer: 'defaults',
       explanation: 'No matching rules found in any layer',
       confidence: 0.5,
-    };
+    });
     
     const event = createMockEvent({});
     const details = generator.generateDetails(noMatchDecision, event);
     
     expect(details.length).toBe(1);
-    expect(details[0].ruleType).toBe('defaults');
-    expect(details[0].ruleString).toBe('(no matching rule)');
+    const detail = details[0]!;
+    expect(detail.ruleType).toBe('defaults');
+    expect(detail.ruleString).toBe('(no matching rule)');
   });
 });
 
@@ -232,25 +260,6 @@ describe('DecisionEngine with Explanation', () => {
     expect(result.explanation.matchedLayer).toBe('user');
   });
 
-  it('should show exception allow explanation', () => {
-    // User rule denies oauth.google
-    const userRule = parseRule('oauth.google@* = deny');
-    engine.setUserRules([userRule]);
-    
-    // Exception allows oauth.google@specific.com
-    const exceptionRule = parseRule('@@oauth.google@specific.com');
-    // Note: exceptions are handled by the precedence engine
-    // For this test, we verify the explanation format when exception matches
-    
-    const specificEvent = createMockEvent({
-      website: 'http://specific.com',
-      capability: createOAuthCapability('google', ['profile']),
-    });
-    
-    // We can't easily test exception without adding it to a pack
-    // But we can test the explanation generator directly
-  });
-
   it('should show pack rule explanation (Balanced)', () => {
     const result = engine.decideWithExplanation(mockEvent);
     
@@ -290,7 +299,7 @@ describe('DecisionEngine with Explanation', () => {
   it('should include evidence in explanation', () => {
     const eventWithEvidence = createMockEvent({
       evidence: [
-        createDOMEvidence({ source: EvidenceSource.DOM, selector: 'iframe[src*="google"]', text: 'Google OAuth', confidence: 0.9, extractionMethod: ExtractionMethod.Attribute }),
+        createDOMEvidence({ selector: 'iframe[src*="google"]', text: 'Google OAuth', confidence: 0.9, extractionMethod: ExtractionMethod.Attribute }),
       ],
     });
     

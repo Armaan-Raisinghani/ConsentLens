@@ -10,9 +10,9 @@ import { DecisionEngine } from '../../src/engine/decision-engine.js';
 import type { ConsentEvent } from '../../src/ir/consent-event.js';
 import { createConsentEvent } from '../../src/ir/consent-event.js';
 import { createOAuthCapability, createCookieCapability } from '../../src/ir/capability.js';
-import { ConsentType, GrantStatus } from '../../src/shared/types.js';
+import { ConsentType } from '../../src/shared/types.js';
 import { createDOMEvidence } from '../../src/ir/evidence.js';
-import { EvidenceSource, ExtractionMethod } from '../../src/shared/types.js';
+import { ExtractionMethod } from '../../src/shared/types.js';
 
 // Helper to create a mock ConsentEvent
 function createMockEvent(overrides: Partial<ConsentEvent> = {}): ConsentEvent {
@@ -20,7 +20,7 @@ function createMockEvent(overrides: Partial<ConsentEvent> = {}): ConsentEvent {
     website: 'http://example.com',
     consentType: ConsentType.OAuth,
     capability: createOAuthCapability('google', ['profile', 'email']),
-    evidence: [createDOMEvidence({ source: EvidenceSource.DOM, selector: 'test', text: 'test', confidence: 1, extractionMethod: ExtractionMethod.TextContent, extractedAt: new Date().toISOString() })],
+    evidence: [createDOMEvidence({ selector: 'test', text: 'test', confidence: 1, extractionMethod: ExtractionMethod.TextContent })],
     ...overrides,
   });
 }
@@ -101,14 +101,14 @@ describe('TemporaryRuleManager', () => {
     
     // Add a custom rule with 0ms (expired immediately)
     const expiredRule = parseRule('cookie.advertising@* = deny');
-    const expiredId = manager.add(expiredRule, 'custom', 0);
+    manager.add(expiredRule, 'custom', 0);
     
     // Advance time to ensure expiry
     vi.advanceTimersByTime(1);
     
     const active = manager.getActive();
     expect(active.length).toBe(1);
-    expect(active[0].id).toBe(activeId);
+    expect(active[0]!.id).toBe(activeId);
     
     vi.useRealTimers();
   });
@@ -173,8 +173,8 @@ describe('TemporaryRuleManager', () => {
   });
 
   it('should track session rules separately', () => {
-    const sessionId = manager.add(parseRule('oauth.test1@* = allow'), 'session');
-    const hourlyId = manager.add(parseRule('oauth.test2@* = deny'), '1hr');
+    manager.add(parseRule('oauth.test1@* = allow'), 'session');
+    manager.add(parseRule('oauth.test2@* = deny'), '1hr');
     
     // Both should be in getActive
     const active = manager.getActive();
