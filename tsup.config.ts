@@ -12,6 +12,7 @@ export default defineConfig({
     'engine/rule-matcher': 'src/engine/rule-matcher.ts',
     'engine/decision-engine': 'src/engine/decision-engine.ts',
     'engine/types': 'src/engine/types.ts',
+    'ai/index': 'src/ai/index.ts',
   },
   format: ['esm', 'cjs'],
   dts: true,
