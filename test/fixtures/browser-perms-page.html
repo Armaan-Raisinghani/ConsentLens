@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Browser Permissions Page</title>
+    <meta name="permissions" content="geolocation camera microphone notifications">
+</head>
+<body>
+    <div class="permissions-container">
+        <h1>Permission Requests</h1>
+        
+        <!-- Explicit data-permission attributes -->
+        <button 
+            class="permission-btn" 
+            data-permission="geolocation"
+            onclick="navigator.geolocation.getCurrentPosition(success, error)"
+        >
+            Allow Location Access
+        </button>
+
+        <button 
+            class="permission-btn" 
+            data-permission="camera"
+            onclick="navigator.mediaDevices.getUserMedia({video: true})"
+        >
+            Enable Camera
+        </button>
+
+        <button 
+            class="permission-btn" 
+            data-permission="microphone"
+            onclick="navigator.mediaDevices.getUserMedia({audio: true})"
+        >
+            Enable Microphone
+        </button>
+
+        <button 
+            class="permission-btn" 
+            data-permission="notifications"
+            onclick="Notification.requestPermission()"
+        >
+            Enable Notifications
+        </button>
+
+        <button 
+            class="permission-btn" 
+            data-permission="clipboard-read"
+            onclick="navigator.clipboard.readText()"
+        >
+            Read Clipboard
+        </button>
+
+        <button 
+            class="permission-btn" 
+            data-permission="clipboard-write"
+            onclick="navigator.clipboard.writeText('test')"
+        >
+            Write Clipboard
+        </button>
+
+        <!-- data-permission-request variant -->
+        <a 
+            class="permission-link" 
+            href="#"
+            data-permission-request="sensors"
+            onclick="startSensors()"
+        >
+            Enable Motion Sensors
+        </a>
+
+        <!-- Buttons with permission-related text but no data attributes -->
+        <button class="btn" onclick="getLocation()">
+            Get My Location
+        </button>
+
+        <button class="btn" onclick="startCamera()">
+            Start Video Call
+        </button>
+
+        <button class="btn" onclick="requestNotify()">
+            Subscribe to Push Notifications
+        </button>
+
+        <button class="btn" onclick="copyToClipboard()">
+            Copy to Clipboard
+        </button>
+    </div>
+
+    <script>
+        // Inline script with navigator.permissions.query
+        navigator.permissions.query({ name: 'geolocation' }).then(result => {
+            console.log('Geolocation permission:', result.state);
+        });
+
+        navigator.permissions.query({ name: 'camera' }).then(result => {
+            console.log('Camera permission:', result.state);
+        });
+
+        navigator.permissions.query({ name: 'microphone' }).then(result => {
+            console.log('Microphone permission:', result.state);
+        });
+
+        navigator.permissions.query({ name: 'notifications' }).then(result => {
+            console.log('Notifications permission:', result.state);
+        });
+
+        navigator.permissions.query({ name: 'clipboard-read' }).then(result => {
+            console.log('Clipboard-read permission:', result.state);
+        });
+
+        navigator.permissions.query({ name: 'clipboard-write' }).then(result => {
+            console.log('Clipboard-write permission:', result.state);
+        });
+
+        // Geolocation API usage
+        function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(showPosition);
+            }
+        }
+
+        function showPosition(position) {
+            console.log('Latitude:', position.coords.latitude);
+        }
+
+        // Media devices usage
+        function startCamera() {
+            navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+                .then(stream => {
+                    console.log('Camera/Mic stream:', stream);
+                });
+        }
+
+        function startVideoOnly() {
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(stream => {
+                    console.log('Video stream:', stream);
+                });
+        }
+
+        function startAudioOnly() {
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(stream => {
+                    console.log('Audio stream:', stream);
+                });
+        }
+
+        // Notifications
+        function requestNotify() {
+            Notification.requestPermission().then(permission => {
+                console.log('Notification permission:', permission);
+            });
+        }
+
+        // Clipboard
+        function copyToClipboard() {
+            navigator.clipboard.writeText('Hello').then(() => {
+                console.log('Copied to clipboard');
+            });
+        }
+
+        function readClipboard() {
+            navigator.clipboard.readText().then(text => {
+                console.log('Clipboard content:', text);
+            });
+        }
+
+        // Sensor APIs
+        function startSensors() {
+            if ('Accelerometer' in window) {
+                const accelerometer = new Accelerometer({ frequency: 60 });
+                accelerometer.addEventListener('reading', e => {
+                    console.log('Acceleration:', accelerometer.x, accelerometer.y, accelerometer.z);
+                });
+                accelerometer.start();
+            }
+            
+            if ('Gyroscope' in window) {
+                const gyroscope = new Gyroscope({ frequency: 60 });
+                gyroscope.addEventListener('reading', e => {
+                    console.log('Rotation:', gyroscope.x, gyroscope.y, gyroscope.z);
+                });
+                gyroscope.start();
+            }
+        }
+    </script>
+
+    <script>
+        // Dynamic permission request added after load
+        document.addEventListener('DOMContentLoaded', () => {
+            const container = document.querySelector('.permissions-container');
+            if (container) {
+                const dynamicBtn = document.createElement('button');
+                dynamicBtn.className = 'permission-btn dynamic-permission';
+                dynamicBtn.setAttribute('data-permission', 'idle-detection');
+                dynamicBtn.textContent = 'Enable Idle Detection';
+                dynamicBtn.onclick = () => {
+                    if ('IdleDetector' in window) {
+                        IdleDetector.requestPermission().then(state => {
+                            console.log('Idle detection permission:', state);
+                        });
+                    }
+                };
+                container.appendChild(dynamicBtn);
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Cookie Page</title>
+</head>
+<body>
+    <div class="cookie-container">
+        <h1>Cookie Test Page</h1>
+        <p>This page sets various cookies for testing classification.</p>
+        
+        <button id="set-cookies" onclick="setTestCookies()">Set Test Cookies</button>
+        <button id="show-cookies" onclick="showCookies()">Show Cookies</button>
+        <pre id="cookie-output"></pre>
+    </div>
+
+    <script>
+        // Set various test cookies
+        function setTestCookies() {
+            const domain = window.location.hostname;
+            const isLocalhost = domain === 'localhost' || domain === '127.0.0.1';
+            const cookieDomain = isLocalhost ? '' : `; domain=.${domain}`;
+            
+            // Essential cookies
+            document.cookie = `session_id=abc123${cookieDomain}; path=/; Secure; SameSite=Lax`;
+            document.cookie = `PHPSESSID=xyz789${cookieDomain}; path=/; HttpOnly; Secure; SameSite=Strict`;
+            document.cookie = `csrf_token=token123${cookieDomain}; path=/; Secure; SameSite=Strict`;
+            document.cookie = `__Host-auth=secure123${cookieDomain}; path=/; Secure; HttpOnly; SameSite=Strict`;
+            document.cookie = `__Secure-session=secure456${cookieDomain}; path=/; Secure; HttpOnly; SameSite=Strict`;
+            
+            // Functional cookies
+            document.cookie = `lang=en-US${cookieDomain}; path=/; SameSite=Lax`;
+            document.cookie = `currency=USD${cookieDomain}; path=/; SameSite=Lax`;
+            document.cookie = `theme=dark${cookieDomain}; path=/; SameSite=Lax`;
+            document.cookie = `user_prefs={"theme":"dark","lang":"en"}${cookieDomain}; path=/; SameSite=Lax`;
+            document.cookie = `cookieconsent=accepted${cookieDomain}; path=/; SameSite=Lax`;
+            
+            // Security cookies
+            document.cookie = `__cf_bm=cloudflare123${cookieDomain}; path=/; Secure; HttpOnly; SameSite=None`;
+            document.cookie = `cf_clearance=cf123${cookieDomain}; path=/; Secure; HttpOnly; SameSite=None`;
+            
+            // Analytics cookies (tracker domains)
+            document.cookie = `_ga=GA1.1.123456789.1234567890${cookieDomain}; path=/; Secure; SameSite=Lax`;
+            document.cookie = `_gid=GA1.1.987654321.1234567890${cookieDomain}; path=/; Secure; SameSite=Lax`;
+            document.cookie = `_gat=1${cookieDomain}; path=/; Secure; SameSite=Lax`;
+            
+            // Advertising cookies (tracker domains)
+            document.cookie = `_fbp=fb.1.1234567890.123456789${cookieDomain}; path=/; Secure; SameSite=Lax`;
+            document.cookie = `fr=facebook123${cookieDomain}; path=/; Secure; SameSite=None`;
+            document.cookie = `_gcl_au=1.1.1234567890.123456789${cookieDomain}; path=/; Secure; SameSite=Lax`;
+            document.cookie = `IDE=doubleclick123${cookieDomain}; path=/; Secure; SameSite=None`;
+            document.cookie = `test_cookie=doubleclick_test${cookieDomain}; path=/; Secure; SameSite=None`;
+            
+            // Third-party tracker cookies (simulated)
+            document.cookie = `_dc_gtm_UA-12345=1${cookieDomain}; path=/; Secure; SameSite=Lax`;
+            document.cookie = `_hjSession_123=eyJpZCI6IjEyMyJ9${cookieDomain}; path=/; Secure; SameSite=Lax`;
+            document.cookie = `_hjSessionUser_123=eyJpZCI6IjEyMyJ9${cookieDomain}; path=/; Secure; SameSite=Lax`;
+            
+            // Personalization cookies
+            document.cookie = `personalization_id=pers123${cookieDomain}; path=/; Secure; SameSite=Lax`;
+            document.cookie = `guest_id=guest123${cookieDomain}; path=/; Secure; SameSite=Lax`;
+            
+            // Unknown/other cookies
+            document.cookie = `unknown_cookie=unknown123${cookieDomain}; path=/; SameSite=Lax`;
+            document.cookie = `custom_tracker=custom456${cookieDomain}; path=/; SameSite=Lax`;
+            
+            alert('Test cookies set! Check console for document.cookie');
+        }
+
+        function showCookies() {
+            const output = document.getElementById('cookie-output');
+            output.textContent = document.cookie;
+            console.log('All cookies:', document.cookie);
+        }
+
+        // Simulate third-party tracker scripts that would set cookies
+        // These would normally come from external domains
+        console.log('Test cookie page loaded');
+        console.log('Current domain:', window.location.hostname);
+        console.log('Document cookie:', document.cookie);
+    </script>
+
+    <!-- Simulated third-party tracker pixels/scripts that would set cookies -->
+    <!-- In reality, these would be loaded from tracker domains -->
+    <img src="https://www.google-analytics.com/collect?v=1&tid=UA-12345-1&cid=123&t=pageview" width="1" height="1" alt="">
+    <img src="https://www.facebook.com/tr?id=12345&ev=PageView" width="1" height="1" alt="">
+    <img src="https://analytics.twitter.com/i/adsct?txn_id=123" width="1" height="1" alt="">
+</body>
+</html>
