@@ -7,7 +7,8 @@
 export * from './ir/index.js';
 
 // Adapters
-export * from './adapters/index.js';
+export type { Adapter, BaseAdapter } from './adapters/index.js';
+export { OAuthAdapter, AdapterRegistry } from './adapters/index.js';
 
 // Plugins
 export * from './plugins/index.js';

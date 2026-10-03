@@ -3,6 +3,7 @@
  */
 
 import { ErrorSeverity } from './types.js';
+import type { ConsentEvent } from '../ir/consent-event.js';
 
 /**
  * Adapter error interface
@@ -39,7 +40,6 @@ export function createAdapterError(
 /**
  * Adapter result type
  */
-export import { ConsentEvent } from '../ir/consent-event.js';
 export type AdapterResult = {
   events: ConsentEvent[];
   errors: AdapterError[];
@@ -68,3 +68,6 @@ export interface Adapter {
   priority: number;
   extract(context: PageContext): Promise<AdapterResult>;
 }
+
+// Re-export ErrorSeverity for consumers
+export { ErrorSeverity } from './types.js';

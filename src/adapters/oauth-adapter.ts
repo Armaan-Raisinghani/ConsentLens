@@ -3,11 +3,12 @@
  */
 
 import { BaseAdapter } from './adapter.js';
-import { ConsentEvent, createOAuthConsentEvent } from '../ir/consent-event.js';
-import { createOAuthCapability } from '../ir/capability.js';
+import type { ConsentEvent } from '../ir/consent-event.js';
+import { createOAuthConsentEvent } from '../ir/consent-event.js';
 import { createDOMEvidence } from '../ir/evidence.js';
-import { AdapterResult, AdapterError, PageContext } from '../shared/errors.js';
-import { EvidenceSource, ExtractionMethod, ConsentType, GrantStatus } from '../shared/types.js';
+import type { AdapterResult, AdapterError, PageContext } from '../shared/errors.js';
+import { ErrorSeverity } from '../shared/errors.js';
+import { ExtractionMethod } from '../shared/types.js';
 
 /**
  * Known OAuth providers with their scope patterns
@@ -132,7 +133,7 @@ export class OAuthAdapter extends BaseAdapter {
             this.createError(
               `Failed to extract OAuth event from element: ${err instanceof Error ? err.message : String(err)}`,
               'OAUTH_EXTRACTION_FAILED',
-              'warning',
+              ErrorSeverity.Warning,
               { elementHtml: element.outerHTML.substring(0, 500) }
             )
           );
@@ -147,7 +148,7 @@ export class OAuthAdapter extends BaseAdapter {
         this.createError(
           `OAuth adapter extraction failed: ${err instanceof Error ? err.message : String(err)}`,
           'OAUTH_ADAPTER_ERROR',
-          'error'
+          ErrorSeverity.Error
         )
       );
     }
@@ -237,7 +238,8 @@ export class OAuthAdapter extends BaseAdapter {
     const text = (element.textContent || '').trim();
     const dataProvider = element.getAttribute('data-provider')?.toLowerCase();
     const dataScope = element.getAttribute('data-scope')?.trim();
-    const dataClientId = element.getAttribute('data-client-id')?.trim();
+    // data-client-id available for future use
+    element.getAttribute('data-client-id')?.trim();
 
     // Determine provider
     let provider = this.identifyProvider(href, text, dataProvider);
@@ -289,7 +291,7 @@ export class OAuthAdapter extends BaseAdapter {
   /**
    * Identify OAuth provider from various signals
    */
-  private identifyProvider(href: string, text: string, dataProvider: string): string | null {
+  private identifyProvider(href: string, text: string, dataProvider: string | undefined): string | null {
     // Explicit data-provider attribute
     if (dataProvider && OAUTH_PROVIDERS.some(p => p.name === dataProvider)) {
       return dataProvider;
@@ -320,13 +322,13 @@ export class OAuthAdapter extends BaseAdapter {
   /**
    * Extract scopes from URL params and data attributes per D-14
    */
-  private extractScopes(href: string, dataScope: string, document: Document): string[] {
+  private extractScopes(href: string, dataScope: string | undefined, document: Document): string[] {
     const scopes = new Set<string>();
 
     // From URL scope parameter
     try {
-      const url = new URL(href, window.location.origin);
-      const scopeParam = url.searchParams.get('scope');
+      const parsedUrl = new URL(href, 'http://localhost');
+      const scopeParam = parsedUrl.searchParams.get('scope');
       if (scopeParam) {
         scopeParam.split(/[\s,+]/).forEach(s => scopes.add(s.trim()));
       }

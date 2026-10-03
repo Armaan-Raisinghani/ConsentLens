@@ -2,8 +2,9 @@
  * Adapter Registry - manages adapter registration and execution per D-22, D-23, D-24
  */
 
-import { Adapter } from './adapter.js';
-import { AdapterResult, PageContext } from '../shared/errors.js';
+import type { Adapter } from './adapter.js';
+import type { AdapterResult, PageContext } from '../shared/errors.js';
+import { ErrorSeverity } from '../shared/errors.js';
 
 /**
  * AdapterRegistry class
@@ -86,7 +87,7 @@ export class AdapterRegistry {
           adapter: adapter.name,
           message: `Adapter threw unhandled error: ${err instanceof Error ? err.message : String(err)}`,
           code: 'ADAPTER_UNHANDLED_ERROR',
-          severity: 'error',
+          severity: ErrorSeverity.Error,
           timestamp: new Date().toISOString(),
         });
       }

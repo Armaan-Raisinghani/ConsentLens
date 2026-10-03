@@ -3,8 +3,8 @@
  * Allows third-party adapters to register via registerAdapter(type, factory)
  */
 
-import { Adapter, AdapterFactory, PageContext, AdapterResult } from '../adapters/adapter.js';
-import { AdapterRegistry } from '../adapters/registry.js';
+import type { Adapter, AdapterFactory, PageContext, AdapterResult } from '../adapters/adapter.js';
+import type { AdapterRegistry } from '../adapters/registry.js';
 
 // Global registry instance for plugin registration
 let globalRegistry: AdapterRegistry | null = null;

@@ -7,7 +7,10 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { JSDOM } from 'jsdom';
 import { OAuthAdapter } from '../src/adapters/oauth-adapter.js';
 import { AdapterRegistry } from '../src/adapters/registry.js';
-import { ConsentType, GrantStatus, EvidenceSource, ExtractionMethod } from '../src/shared/types.js';
+import { ConsentType, GrantStatus, EvidenceSource } from '../src/shared/types.js';
+import { isOAuthCapability } from '../src/ir/capability.js';
+import type { ConsentEvent } from '../src/ir/consent-event.js';
+import type { OAuthCapability } from '../src/ir/capability.js';
 import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
@@ -18,6 +21,12 @@ const __dirname = dirname(__filename);
 // Load test fixture
 const fixturePath = join(__dirname, 'fixtures', 'oauth-page.html');
 const fixtureHtml = readFileSync(fixturePath, 'utf-8');
+
+function getOAuthEvent(result: { events: ConsentEvent[] }, provider: string): ConsentEvent & { capability: OAuthCapability } | undefined {
+  return result.events.find((e): e is ConsentEvent & { capability: OAuthCapability } => 
+    isOAuthCapability(e.capability) && e.capability.provider === provider
+  );
+}
 
 describe('OAuthAdapter', () => {
   let adapter: OAuthAdapter;
@@ -52,9 +61,7 @@ describe('OAuthAdapter', () => {
   it('should extract Google OAuth event with correct capability', async () => {
     const result = await adapter.extract(pageContext);
     
-    const googleEvent = result.events.find(e => 
-      e.capability.type === 'oauth' && e.capability.provider === 'google'
-    );
+    const googleEvent = getOAuthEvent(result, 'google');
     
     expect(googleEvent).toBeDefined();
     expect(googleEvent!.consentType).toBe(ConsentType.OAuth);
@@ -72,9 +79,7 @@ describe('OAuthAdapter', () => {
   it('should extract GitHub OAuth event with correct capability', async () => {
     const result = await adapter.extract(pageContext);
     
-    const githubEvent = result.events.find(e => 
-      e.capability.type === 'oauth' && e.capability.provider === 'github'
-    );
+    const githubEvent = getOAuthEvent(result, 'github');
     
     expect(githubEvent).toBeDefined();
     expect(githubEvent!.capability.provider).toBe('github');
@@ -86,9 +91,7 @@ describe('OAuthAdapter', () => {
   it('should extract Microsoft OAuth event with correct capability', async () => {
     const result = await adapter.extract(pageContext);
     
-    const microsoftEvent = result.events.find(e => 
-      e.capability.type === 'oauth' && e.capability.provider === 'microsoft'
-    );
+    const microsoftEvent = getOAuthEvent(result, 'microsoft');
     
     expect(microsoftEvent).toBeDefined();
     expect(microsoftEvent!.capability.provider).toBe('microsoft');
@@ -100,9 +103,7 @@ describe('OAuthAdapter', () => {
   it('should extract Slack OAuth event with correct capability', async () => {
     const result = await adapter.extract(pageContext);
     
-    const slackEvent = result.events.find(e => 
-      e.capability.type === 'oauth' && e.capability.provider === 'slack'
-    );
+    const slackEvent = getOAuthEvent(result, 'slack');
     
     expect(slackEvent).toBeDefined();
     expect(slackEvent!.capability.provider).toBe('slack');
@@ -114,9 +115,7 @@ describe('OAuthAdapter', () => {
   it('should extract Discord OAuth event with correct capability', async () => {
     const result = await adapter.extract(pageContext);
     
-    const discordEvent = result.events.find(e => 
-      e.capability.type === 'oauth' && e.capability.provider === 'discord'
-    );
+    const discordEvent = getOAuthEvent(result, 'discord');
     
     expect(discordEvent).toBeDefined();
     expect(discordEvent!.capability.provider).toBe('discord');
@@ -128,9 +127,7 @@ describe('OAuthAdapter', () => {
   it('should extract generic OAuth fallback event', async () => {
     const result = await adapter.extract(pageContext);
     
-    const genericEvent = result.events.find(e => 
-      e.capability.type === 'oauth' && e.capability.provider === 'unknown'
-    );
+    const genericEvent = getOAuthEvent(result, 'unknown');
     
     expect(genericEvent).toBeDefined();
     expect(genericEvent!.capability.provider).toBe('unknown');
@@ -141,9 +138,7 @@ describe('OAuthAdapter', () => {
   it('should merge scopes from URL params and data attributes (D-14)', async () => {
     const result = await adapter.extract(pageContext);
     
-    const googleEvent = result.events.find(e => 
-      e.capability.type === 'oauth' && e.capability.provider === 'google'
-    );
+    const googleEvent = getOAuthEvent(result, 'google');
     
     // Scopes from both URL and data-scope should be merged and deduplicated
     const scopes = googleEvent!.capability.scope;
@@ -158,14 +153,17 @@ describe('OAuthAdapter', () => {
   it('should create evidence with correct structure', async () => {
     const result = await adapter.extract(pageContext);
     
-    const googleEvent = result.events.find(e => 
-      e.capability.type === 'oauth' && e.capability.provider === 'google'
-    );
+    const googleEvent = getOAuthEvent(result, 'google');
     
-    expect(googleEvent!.evidence).toBeDefined();
-    expect(googleEvent!.evidence.length).toBeGreaterThan(0);
-    
-    const evidence = googleEvent!.evidence[0];
+    expect(googleEvent).toBeDefined();
+    const event = googleEvent!; // Type narrowed after check
+    // TypeScript doesn't narrow after throw, so we assert
+    const evidenceList = event.evidence;
+    if (!evidenceList || evidenceList.length === 0) {
+      throw new Error('Expected evidence to be defined');
+    }
+    // TypeScript doesn't narrow after throw, assert the type
+    const evidence = evidenceList[0]!;
     expect(evidence.source).toBe(EvidenceSource.DOM);
     expect(evidence.selector).toBeDefined();
     expect(evidence.confidence).toBeGreaterThan(0);
@@ -231,7 +229,7 @@ describe('AdapterRegistry with OAuthAdapter', () => {
     const result = await registry.run(pageContext);
     
     expect(result.events.length).toBeGreaterThan(0);
-    expect(result.events.some(e => e.capability.type === 'oauth')).toBe(true);
+    expect(result.events.some(e => isOAuthCapability(e.capability))).toBe(true);
   });
 
   it('should run adapters in priority order', async () => {
@@ -248,16 +246,21 @@ describe('AdapterRegistry with OAuthAdapter', () => {
     
     // OAuth adapter (priority 10) should run before low-priority (priority 50)
     const adapters = registry.getAdapters();
-    expect(adapters[0].name).toBe('oauth');
-    expect(adapters[1].name).toBe('low-priority');
+    expect(adapters.length).toBeGreaterThanOrEqual(2);
+    if (adapters.length >= 2) {
+      expect(adapters[0]!.name).toBe('oauth');
+      expect(adapters[1]!.name).toBe('low-priority');
+    }
   });
 
   it('should support mutable context enrichment (D-24)', async () => {
     registry.register([adapter]);
     registry.setSharedContext('testKey', 'testValue');
     
-    const result = await registry.run(pageContext);
+    await registry.run(pageContext);
     
-    expect(registry.getSharedContext('testKey')).toBe('testValue');
+    const value = registry.getSharedContext('testKey');
+    expect(value).not.toBeUndefined();
+    expect(String(value)).toBe('testValue');
   });
 });

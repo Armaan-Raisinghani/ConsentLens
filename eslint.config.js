@@ -1,24 +1,27 @@
+import tseslint from '@typescript-eslint/eslint-plugin';
+import typescriptParser from '@typescript-eslint/parser';
+import vitestPlugin from 'eslint-plugin-vitest';
+
 export default [
-  {
-    ignores: ['dist/', 'node_modules/', '*.config.*'],
-  },
+  { ignores: ['dist/', 'node_modules/', '*.config.*'] },
   {
     files: ['**/*.ts'],
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: 'module',
+      parser: typescriptParser,
       parserOptions: {
         project: './tsconfig.json',
         tsconfigRootDir: import.meta.dirname,
       },
     },
     plugins: {
-      '@typescript-eslint': await import('@typescript-eslint/eslint-plugin'),
-      vitest: await import('eslint-plugin-vitest'),
+      '@typescript-eslint': tseslint,
+      vitest: vitestPlugin,
     },
     rules: {
-      ...(await import('@typescript-eslint/eslint-plugin')).configs.recommended.rules,
-      ...(await import('eslint-plugin-vitest')).configs.recommended.rules,
+      ...tseslint.configs.recommended.rules,
+      ...vitestPlugin.configs.recommended.rules,
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
       '@typescript-eslint/consistent-type-imports': 'error',
       '@typescript-eslint/no-explicit-any': 'warn',

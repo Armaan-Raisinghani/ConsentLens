@@ -2,11 +2,12 @@
  * ConsentEvent interface - core IR type per IR-01, D-08
  */
 
-import { Capability } from './capability.js';
-import { Purpose } from './purpose.js';
-import { Evidence } from './evidence.js';
-import { DecisionRecord } from './decision-record.js';
+import type { Capability } from './capability.js';
+import type { Purpose } from './purpose.js';
+import type { Evidence } from './evidence.js';
+import type { DecisionRecord } from './decision-record.js';
 import { ConsentType, GrantStatus } from '../shared/types.js';
+import { createOAuthCapability } from './capability.js';
 
 /**
  * ConsentEvent - unified consent schema per D-08
@@ -112,7 +113,6 @@ export function createOAuthConsentEvent(params: {
   grantStatus?: GrantStatus;
   userAction?: string;
 }): ConsentEvent {
-  const { createOAuthCapability } = await import('./capability.js');
   return createConsentEvent({
     website: params.website,
     consentType: ConsentType.OAuth,

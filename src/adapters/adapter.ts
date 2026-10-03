@@ -2,10 +2,11 @@
  * Adapter interface and types - per D-10, D-11, D-12
  */
 
-import { ConsentEvent } from '../ir/consent-event.js';
-import { AdapterError, AdapterResult, PageContext, AdapterFactory } from '../shared/errors.js';
+import type { ConsentEvent } from '../ir/consent-event.js';
+import type { AdapterError, AdapterResult, PageContext, AdapterFactory } from '../shared/errors.js';
+import { ErrorSeverity } from '../shared/errors.js';
 
-export { AdapterError, AdapterResult, PageContext, AdapterFactory };
+export type { AdapterError, AdapterResult, PageContext, AdapterFactory };
 
 /**
  * Adapter interface - per D-11, D-12
@@ -47,7 +48,7 @@ export abstract class BaseAdapter implements Adapter {
   protected createError(
     message: string,
     code: string,
-    severity: AdapterError['severity'] = 'error',
+    severity: ErrorSeverity = ErrorSeverity.Error,
     context?: Record<string, unknown>
   ): AdapterError {
     return {
@@ -75,7 +76,7 @@ export abstract class BaseAdapter implements Adapter {
       const error = this.createError(
         `${errorMessage}: ${err instanceof Error ? err.message : String(err)}`,
         errorCode,
-        'error'
+        ErrorSeverity.Error
       );
       return { data: null, error };
     }
